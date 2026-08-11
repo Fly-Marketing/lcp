@@ -1,1 +1,28 @@
-{"timestamp":"00:00:01.058","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:00.877","source":"Server","level":"LOG","message":"- Experiments (use with caution):"}
+{"timestamp":"00:00:00.877","source":"Server","level":"LOG","message":"  · serverActions"}
+{"timestamp":"00:00:00.877","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:02:31.196","source":"Browser","level":"ERROR","message":"./app/(app)/units/page.tsx:101:4\nError: Expected '</', got ';'\n   99 |       </div>\n  100 |     </div>\n> 101 |   );\n      |    ^\n  102 | }\n  103 |\n\nParsing ecmascript source code failed "}
+{"timestamp":"00:02:31.197","source":"Server","level":"ERROR","message":"[browser] \"./app/(app)/units/page.tsx:101:4\\nError: Expected '</', got ';'\\n   99 |       </div>\\n  100 |     </div>\\n> 101 |   );\\n      |    ^\\n  102 | }\\n  103 |\\n\\nParsing ecmascript source code failed\" \"\""}
+{"timestamp":"00:02:31.273","source":"Browser","level":"ERROR","message":"./app/(app)/units/page.tsx:101:4\nError: Expected '</', got ';'\n   99 |       </div>\n  100 |     </div>\n> 101 |   );\n      |    ^\n  102 | }\n  103 |\n\nParsing ecmascript source code failed "}
+{"timestamp":"00:02:31.274","source":"Server","level":"ERROR","message":"[browser] \"./app/(app)/units/page.tsx:101:4\\nError: Expected '</', got ';'\\n   99 |       </div>\\n  100 |     </div>\\n> 101 |   );\\n      |    ^\\n  102 | }\\n  103 |\\n\\nParsing ecmascript source code failed\" \"\""}
+{"timestamp":"00:03:24.799","source":"Server","level":"LOG","message":"✓ Compiled in 84ms"}
+{"timestamp":"00:04:01.085","source":"Server","level":"LOG","message":"✓ Compiled in 61ms"}
+{"timestamp":"00:04:14.212","source":"Server","level":"LOG","message":"✓ Compiled in 40ms"}
+{"timestamp":"00:04:37.944","source":"Server","level":"LOG","message":"✓ Compiled in 30ms"}
+{"timestamp":"00:04:53.676","source":"Server","level":"LOG","message":"✓ Compiled in 72ms"}
+{"timestamp":"00:05:13.585","source":"Server","level":"LOG","message":"✓ Compiled in 70ms"}
+{"timestamp":"00:05:34.990","source":"Server","level":"LOG","message":"✓ Compiled in 68ms"}
+{"timestamp":"00:05:44.834","source":"Server","level":"LOG","message":"✓ Compiled in 62ms"}
+{"timestamp":"00:06:14.966","source":"Server","level":"LOG","message":"✓ Compiled in 90ms"}
+{"timestamp":"00:22:14.421","source":"Server","level":"LOG","message":"✓ Compiled in 30ms"}
+{"timestamp":"00:22:19.306","source":"Server","level":"LOG","message":"✓ Compiled in 34ms"}
+{"timestamp":"00:22:25.117","source":"Server","level":"LOG","message":"✓ Compiled in 81ms"}
+{"timestamp":"00:22:29.901","source":"Server","level":"LOG","message":"✓ Compiled in 41ms"}
+{"timestamp":"00:23:43.287","source":"Server","level":"LOG","message":"✓ Compiled in 31ms"}
+{"timestamp":"00:42:14.098","source":"Server","level":"LOG","message":"✓ Compiled in 71ms"}
+{"timestamp":"00:42:21.279","source":"Server","level":"LOG","message":"✓ Compiled in 41ms"}
+{"timestamp":"00:42:49.930","source":"Server","level":"LOG","message":"✓ Compiled in 45ms"}
+{"timestamp":"00:56:09.764","source":"Server","level":"LOG","message":"✓ Compiled in 81ms"}
+{"timestamp":"00:56:10.522","source":"Server","level":"ERROR","message":"⨯ ReferenceError: daysBetween is not defined"}
+{"timestamp":"13:08:58.992","source":"Server","level":"LOG","message":"✓ Compiled in 272ms"}
+{"timestamp":"13:08:59.647","source":"Server","level":"ERROR","message":"⨯ ReferenceError: dedupeByUnit is not defined"}

@@ -1,5 +1,192 @@
 {
-  "node": {},
+  "node": {
+    "00c645e5db7231a98a06a1fb018e433bb6eaf3a510": {
+      "workers": {
+        "app/(app)/jobs/[id]/complete/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/complete/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/jobs/[id]/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/units/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/units/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/work/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/work/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "filename": "lib/airtable/actions.ts",
+      "exportedName": "logout"
+    },
+    "406c6020591da4cee47489239541a40feafc25e114": {
+      "workers": {
+        "app/(app)/jobs/[id]/complete/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/complete/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/jobs/[id]/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/units/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/units/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/work/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/work/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "filename": "lib/airtable/actions.ts",
+      "exportedName": "submitReport"
+    },
+    "40a818e422bda5bfc8b915b1002ec097b821600fe8": {
+      "workers": {
+        "app/(app)/jobs/[id]/complete/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/complete/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/jobs/[id]/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/units/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/units/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/work/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/work/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "filename": "lib/airtable/actions.ts",
+      "exportedName": "startClean"
+    },
+    "60e7f19d03632aed27a1514b67d64ca21f8b910837": {
+      "workers": {
+        "app/(app)/jobs/[id]/complete/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/complete/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/jobs/[id]/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/units/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/units/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/work/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/work/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "filename": "lib/airtable/actions.ts",
+      "exportedName": "completeClean"
+    },
+    "40e157984650a089f2ea9d072a695427df6e56a673": {
+      "workers": {
+        "app/(app)/jobs/[id]/complete/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/complete/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/jobs/[id]/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/units/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/units/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/work/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/work/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "filename": "lib/airtable/actions.ts",
+      "exportedName": "claimRoute"
+    },
+    "4077c0fbca48eaef0d6dab092eace3acef6b95194e": {
+      "workers": {
+        "app/(app)/jobs/[id]/complete/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/complete/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/jobs/[id]/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/jobs/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/units/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/units/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        },
+        "app/(app)/work/page": {
+          "moduleId": "[project]/.next-internal/server/app/(app)/work/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/airtable/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "filename": "lib/airtable/actions.ts",
+      "exportedName": "claimJob"
+    }
+  },
   "edge": {},
   "encryptionKey": "9y8AhRckkbtP4qIoAdicBYQGbtosrdwukHKjLAXfuBw="
 }
