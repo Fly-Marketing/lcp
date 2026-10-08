@@ -9,14 +9,18 @@ function requireEnv(name: string): string {
   return value;
 }
 
-// Service-role client: bypasses RLS, server-only, never reaches the browser.
-// All pilot reads/writes go through this — the trust boundary is "this code
-// runs on the server", not Postgres-level policy (see access_links' deny-all
-// RLS, which exists specifically to block the anon key from touching it).
+// Publishable-key client, server-only. Not using the service-role key —
+// RLS policies on access_links/jobs/units/buildings/building_cleaners/staff/
+// reports are deliberately open (using true) to let this key do what the
+// pilot needs. That means anyone holding this key (it's not secret — it's
+// embedded in client code and n8n workflows already) can read/write those
+// tables directly, not just through this app's server code. Revisit before
+// onboarding real hosts/cleaners — tighten policies or switch to the
+// service-role key once it's available.
 export function getServiceClient() {
   return createClient(
     requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
     { auth: { persistSession: false } }
   );
 }
