@@ -22,7 +22,7 @@ function colorFor(index: number) {
 }
 
 export function BundleSuggestionCard({ bundle }: { bundle: BundleSuggestion }) {
-  const { claimJobs, employee } = useMockStore();
+  const { claimJob, employee } = useMockStore();
   const router = useRouter();
   const [claiming, setClaiming] = useState(false);
   const color = colorFor(bundle.colorIndex);
@@ -32,10 +32,12 @@ export function BundleSuggestionCard({ bundle }: { bundle: BundleSuggestion }) {
 
   async function handleClaimBundle() {
     setClaiming(true);
-    const result = await claimJobs(openJobs.map((job) => job.id));
-    if (!result.success) {
-      setClaiming(false);
-      return;
+    for (const job of openJobs) {
+      const result = await claimJob(job.id);
+      if (!result.success) {
+        setClaiming(false);
+        return;
+      }
     }
     router.push(`/jobs/${bundle.jobs[0].id}`);
   }
@@ -75,12 +77,7 @@ export function BundleSuggestionCard({ bundle }: { bundle: BundleSuggestion }) {
 
       <div className="space-y-3">
         {bundle.jobs.map((job) => (
-          <JobCard
-            key={job.id}
-            job={job}
-            showClaim
-            claimButtonClassName={`${color.buttonBg} text-white`}
-          />
+          <JobCard key={job.id} job={job} showClaim />
         ))}
       </div>
     </div>
