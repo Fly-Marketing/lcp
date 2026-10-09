@@ -1,12 +1,10 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ChevronLeft, Calendar, MapPin, Clock, KeyRound, AlertTriangle, Sparkles } from "lucide-react";
 
-import { PropertyPhoto } from "@/components/pilot/property-photo";
 import { PilotShell } from "@/components/pilot/pilot-shell";
-import { JobViewActions } from "@/components/pilot/job-view-actions";
-import { OwnerContact } from "@/components/pilot/owner-contact";
-import { getStaffForToken, getJobById } from "@/lib/pilot/queries";
+import { JobList } from "@/components/pilot/job-list";
+import { JobDetailPanel } from "@/components/pilot/job-detail-panel";
+import { MasterDetail } from "@/components/pilot/master-detail";
+import { getStaffForToken, getJobById, getJobsForStaff } from "@/lib/pilot/queries";
 import { hashTokenForLookup } from "@/lib/pilot/links";
 
 export const dynamic = "force-dynamic";
@@ -23,74 +21,21 @@ export default async function PilotJobViewPage({
     notFound();
   }
 
-  const job = await getJobById(jobId, staff.id);
+  const [job, jobs] = await Promise.all([
+    getJobById(jobId, staff.id),
+    getJobsForStaff(staff.id),
+  ]);
+
   if (!job) {
     notFound();
   }
 
   return (
     <PilotShell token={token} staffName={staff.name}>
-      <div className="flex flex-col gap-4">
-        <Link
-          href={`/pilot/job/${token}`}
-          className="flex items-center gap-1 text-sm text-muted-foreground"
-        >
-          <ChevronLeft className="size-4" />
-          Back to today
-        </Link>
-
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <PropertyPhoto className="h-40 w-full" />
-        </div>
-
-        <div>
-          <h1 className="font-heading text-2xl font-medium">{job.unitLabel}</h1>
-          <p className="text-muted-foreground">{job.propertyName}</p>
-        </div>
-
-        <OwnerContact job={job} />
-
-        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-sm">
-          <div className="flex items-start gap-2">
-            <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <span>{job.address}</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <Calendar className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <span>
-              Checkout {job.checkoutDate} at {job.checkoutTime}
-              {job.nextCheckInDate ? ` · Next guest ${job.nextCheckInDate}` : ""}
-            </span>
-          </div>
-          <div className="flex items-start gap-2">
-            <Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <span>Approx. {job.expectedHours} hrs</span>
-          </div>
-        </div>
-
-        {job.accessInstructions ? (
-          <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-4 text-sm">
-            <KeyRound className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <span>{job.accessInstructions}</span>
-          </div>
-        ) : null}
-
-        {job.specialRequirements ? (
-          <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-4 text-sm">
-            <Sparkles className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <span>{job.specialRequirements}</span>
-          </div>
-        ) : null}
-
-        {job.importantNotes ? (
-          <div className="flex items-start gap-2 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-            <span>{job.importantNotes}</span>
-          </div>
-        ) : null}
-
-        <JobViewActions token={token} job={job} staffId={staff.id} />
-      </div>
+      <MasterDetail
+        list={<JobList token={token} jobs={jobs} selectedJobId={job.id} />}
+        detail={<JobDetailPanel token={token} job={job} staffId={staff.id} showBackLink />}
+      />
     </PilotShell>
   );
 }

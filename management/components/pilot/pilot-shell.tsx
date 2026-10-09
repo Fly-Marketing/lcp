@@ -73,7 +73,7 @@ export function PilotShell({
           <span className="text-sm text-muted-foreground">Hi, {staffName}</span>
         </header>
 
-        <main className="mx-auto w-full max-w-md flex-1 p-4 pb-20 md:max-w-2xl md:p-6 md:pb-6">
+        <main className="mx-auto w-full max-w-md flex-1 p-4 pb-20 md:max-w-5xl md:p-6 md:pb-6">
           {children}
         </main>
 

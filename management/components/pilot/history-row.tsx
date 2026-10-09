@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 
-import { PropertyPhoto } from "@/components/pilot/property-photo";
 import type { PilotJob } from "@/lib/pilot/types";
 
 export function HistoryRow({ token, job }: { token: string; job: PilotJob }) {
@@ -10,8 +9,6 @@ export function HistoryRow({ token, job }: { token: string; job: PilotJob }) {
       href={`/pilot/job/${token}/view/${job.id}`}
       className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:bg-muted/40"
     >
-      <PropertyPhoto className="size-14 shrink-0 rounded-lg" />
-
       <div className="flex-1 overflow-hidden">
         <h3 className="truncate text-sm font-semibold">{job.unitLabel}</h3>
         <p className="truncate text-xs text-muted-foreground">{job.propertyName}</p>
