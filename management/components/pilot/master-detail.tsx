@@ -15,7 +15,9 @@ export function MasterDetail({
       {/* On mobile, only the detail shows (the list route is a separate page). On
           desktop, both columns render side by side. */}
       <div className="hidden md:block md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto">{list}</div>
-      <div className="w-full max-w-md md:max-w-none">{detail}</div>
+      <div className="w-full max-w-md md:max-w-none md:rounded-2xl md:border md:border-border md:bg-background md:p-6">
+        {detail}
+      </div>
     </div>
   );
 }
