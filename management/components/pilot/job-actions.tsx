@@ -2,26 +2,27 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { acceptJob, completeJob, reportIssue } from "@/lib/pilot/actions";
+import { acceptJob, reportIssue } from "@/lib/pilot/actions";
 
 export function JobActions({
+  token,
   jobId,
   staffId,
   status,
 }: {
+  token: string;
   jobId: string;
   staffId: string;
   status: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [pendingAction, setPendingAction] = useState<"accept" | "complete" | "report" | null>(
-    null
-  );
+  const [pendingAction, setPendingAction] = useState<"accept" | "report" | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -38,22 +39,6 @@ export function JobActions({
         return;
       }
       toast.success("Job accepted");
-      router.refresh();
-    });
-  }
-
-  function handleComplete() {
-    setError(null);
-    setPendingAction("complete");
-    startTransition(async () => {
-      const result = await completeJob(jobId);
-      if (!result.success) {
-        const message = result.message ?? "Failed to complete job";
-        setError(message);
-        toast.error(message);
-        return;
-      }
-      toast.success("Marked complete");
       router.refresh();
     });
   }
@@ -91,11 +76,8 @@ export function JobActions({
           </Button>
         ) : null}
         {status === "Claimed" ? (
-          <Button size="sm" disabled={isPending} onClick={handleComplete}>
-            {isPending && pendingAction === "complete" ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : null}
-            Mark complete
+          <Button size="sm" asChild>
+            <Link href={`/pilot/job/${token}/complete/${jobId}`}>Mark complete</Link>
           </Button>
         ) : null}
         <Button

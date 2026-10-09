@@ -1,10 +1,67 @@
 import "server-only";
 import { getServiceClient } from "@/lib/pilot/supabase";
 import { usesFakeData } from "@/lib/pilot/mode";
-import { fakeGetStaffForToken, fakeGetJobsForStaff, FAKE_TOKEN } from "@/lib/pilot/fake-store";
+import {
+  fakeGetStaffForToken,
+  fakeGetJobsForStaff,
+  fakeGetCompletedJobsForStaff,
+  fakeGetJobById,
+  FAKE_TOKEN,
+} from "@/lib/pilot/fake-store";
 import type { PilotJob } from "@/lib/pilot/types";
 
-export async function getStaffForToken(tokenHashOrToken: string, rawToken: string) {
+const JOB_SELECT =
+  "id, unit_id, checkout_date, checkout_time, next_check_in_date, expected_hours, status, completed_at, cancelled_at";
+
+const UNIT_SELECT =
+  "id, unit_name, address, building_id, access_instructions, important_notes, special_requirements, buildings(name)";
+
+type RawUnit = {
+  id: string;
+  unit_name: string | null;
+  address: string | null;
+  building_id: string | null;
+  access_instructions: string | null;
+  important_notes: string | null;
+  special_requirements: string | null;
+  buildings: { name: string } | { name: string }[] | null;
+};
+
+type RawJob = {
+  id: string;
+  unit_id: string | null;
+  checkout_date: string | null;
+  checkout_time: string | null;
+  next_check_in_date: string | null;
+  expected_hours: number | null;
+  status: string;
+  completed_at: string | null;
+  cancelled_at: string | null;
+};
+
+function toPilotJob(job: RawJob, unitById: Map<string, RawUnit>): PilotJob {
+  const unit = job.unit_id ? unitById.get(job.unit_id) : undefined;
+  const building = unit?.buildings ?? null;
+  const buildingName = Array.isArray(building) ? building[0]?.name : building?.name;
+
+  return {
+    id: job.id,
+    unitLabel: unit?.unit_name ?? "Unknown unit",
+    propertyName: buildingName ?? "Unknown property",
+    address: unit?.address ?? "",
+    checkoutDate: job.checkout_date,
+    checkoutTime: job.checkout_time,
+    nextCheckInDate: job.next_check_in_date,
+    expectedHours: Number(job.expected_hours ?? 0),
+    status: job.status,
+    accessInstructions: unit?.access_instructions ?? null,
+    importantNotes: unit?.important_notes ?? null,
+    specialRequirements: unit?.special_requirements ?? null,
+    completedAt: job.completed_at,
+  };
+}
+
+export async function getStaffForToken(tokenHash: string, rawToken: string) {
   if (usesFakeData()) {
     return fakeGetStaffForToken(rawToken);
   }
@@ -13,7 +70,7 @@ export async function getStaffForToken(tokenHashOrToken: string, rawToken: strin
   const { data: link } = await supabase
     .from("access_links")
     .select("staff_id, expires_at, revoked_at")
-    .eq("token_hash", tokenHashOrToken)
+    .eq("token_hash", tokenHash)
     .eq("persona", "cleaner")
     .maybeSingle();
 
@@ -30,13 +87,7 @@ export async function getStaffForToken(tokenHashOrToken: string, rawToken: strin
   return staff;
 }
 
-// A cleaner's jobs = every open job at any building they're assigned to
-// (building_cleaners), not individually-picked units.
-export async function getJobsForStaff(staffId: string): Promise<PilotJob[]> {
-  if (usesFakeData()) {
-    return fakeGetJobsForStaff(staffId);
-  }
-
+async function getUnitsForStaff(staffId: string): Promise<Map<string, RawUnit>> {
   const supabase = getServiceClient();
 
   const { data: assignments } = await supabase
@@ -45,45 +96,75 @@ export async function getJobsForStaff(staffId: string): Promise<PilotJob[]> {
     .eq("staff_id", staffId);
 
   const buildingIds = (assignments ?? []).map((a) => a.building_id);
-  if (buildingIds.length === 0) return [];
+  if (buildingIds.length === 0) return new Map();
 
   const { data: units } = await supabase
     .from("units")
-    .select("id, unit_name, address, building_id, buildings(name)")
+    .select(UNIT_SELECT)
     .in("building_id", buildingIds);
 
-  const unitIds = (units ?? []).map((u) => u.id);
+  return new Map((units ?? []).map((u) => [u.id, u as unknown as RawUnit]));
+}
+
+// A cleaner's jobs = every job at any building they're assigned to
+// (building_cleaners), not individually-picked units.
+export async function getJobsForStaff(staffId: string): Promise<PilotJob[]> {
+  if (usesFakeData()) {
+    return fakeGetJobsForStaff(staffId);
+  }
+
+  const unitById = await getUnitsForStaff(staffId);
+  const unitIds = [...unitById.keys()];
   if (unitIds.length === 0) return [];
 
-  const unitById = new Map((units ?? []).map((u) => [u.id, u]));
-
+  const supabase = getServiceClient();
   const { data: jobs } = await supabase
     .from("jobs")
-    .select(
-      "id, unit_id, checkout_date, checkout_time, next_check_in_date, expected_hours, status, completed_at, cancelled_at"
-    )
+    .select(JOB_SELECT)
     .in("unit_id", unitIds)
     .is("cancelled_at", null)
     .is("completed_at", null)
     .order("checkout_date", { ascending: true });
 
-  return (jobs ?? []).map((job) => {
-    const unit = job.unit_id ? unitById.get(job.unit_id) : undefined;
-    const building = unit?.buildings as { name: string } | { name: string }[] | null;
-    const buildingName = Array.isArray(building) ? building[0]?.name : building?.name;
+  return (jobs ?? []).map((job) => toPilotJob(job as RawJob, unitById));
+}
 
-    return {
-      id: job.id,
-      unitLabel: unit?.unit_name ?? "Unknown unit",
-      propertyName: buildingName ?? "Unknown property",
-      address: unit?.address ?? "",
-      checkoutDate: job.checkout_date,
-      checkoutTime: job.checkout_time,
-      nextCheckInDate: job.next_check_in_date,
-      expectedHours: Number(job.expected_hours ?? 0),
-      status: job.status,
-    };
-  });
+export async function getCompletedJobsForStaff(staffId: string): Promise<PilotJob[]> {
+  if (usesFakeData()) {
+    return fakeGetCompletedJobsForStaff(staffId);
+  }
+
+  const unitById = await getUnitsForStaff(staffId);
+  const unitIds = [...unitById.keys()];
+  if (unitIds.length === 0) return [];
+
+  const supabase = getServiceClient();
+  const { data: jobs } = await supabase
+    .from("jobs")
+    .select(JOB_SELECT)
+    .in("unit_id", unitIds)
+    .not("completed_at", "is", null)
+    .order("completed_at", { ascending: false })
+    .limit(25);
+
+  return (jobs ?? []).map((job) => toPilotJob(job as RawJob, unitById));
+}
+
+export async function getJobById(jobId: string, staffId: string): Promise<PilotJob | null> {
+  if (usesFakeData()) {
+    return fakeGetJobById(jobId);
+  }
+
+  const unitById = await getUnitsForStaff(staffId);
+  const supabase = getServiceClient();
+  const { data: job } = await supabase
+    .from("jobs")
+    .select(JOB_SELECT)
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (!job) return null;
+  return toPilotJob(job as RawJob, unitById);
 }
 
 export { FAKE_TOKEN };
