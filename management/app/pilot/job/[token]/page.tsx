@@ -54,12 +54,7 @@ export default async function PilotJobPage({
               <h2 className="text-sm font-semibold text-muted-foreground">Today</h2>
               {todayJobs.map((job) => (
                 <PilotJobCard key={job.id} job={job} isToday>
-                  <JobActions
-                    token={token}
-                    jobId={job.id}
-                    staffId={staff.id}
-                    status={job.status}
-                  />
+                  <JobActions token={token} job={job} staffId={staff.id} />
                 </PilotJobCard>
               ))}
             </div>
@@ -70,12 +65,7 @@ export default async function PilotJobPage({
               <h2 className="text-sm font-semibold text-muted-foreground">Later this week</h2>
               {laterJobs.map((job) => (
                 <PilotJobCard key={job.id} job={job}>
-                  <JobActions
-                    token={token}
-                    jobId={job.id}
-                    staffId={staff.id}
-                    status={job.status}
-                  />
+                  <JobActions token={token} job={job} staffId={staff.id} />
                 </PilotJobCard>
               ))}
             </div>
