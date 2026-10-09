@@ -14,6 +14,25 @@ export interface PilotJob {
   completedAt: string | null;
 }
 
+export type IssueCategory =
+  | "Supplies Needed"
+  | "Maintenance Issue"
+  | "Damage / Property Concern"
+  | "Access Problem"
+  | "Cleaning Concern"
+  | "Schedule Issue"
+  | "Other";
+
+export const ISSUE_CATEGORIES: IssueCategory[] = [
+  "Supplies Needed",
+  "Maintenance Issue",
+  "Damage / Property Concern",
+  "Access Problem",
+  "Cleaning Concern",
+  "Schedule Issue",
+  "Other",
+];
+
 export const COMPLETION_CHECKLIST_ITEMS = [
   { id: "trash", title: "Trash out", description: "All trash and recycling removed" },
   { id: "linens", title: "Linens changed", description: "Fresh sheets and towels" },

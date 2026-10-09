@@ -134,10 +134,18 @@ export function fakeCompleteJob(jobId: string) {
   return { success: true };
 }
 
-export function fakeReportIssue(jobId: string, description: string) {
+export function fakeReportIssue(
+  jobId: string,
+  description: string,
+  category: string,
+  urgent: boolean,
+  photoUrls: string[]
+) {
   const job = fakeJobs.find((j) => j.id === jobId);
   if (!job) return { success: false, message: "Fake job not found" };
   // eslint-disable-next-line no-console
-  console.log(`[fake report] job=${jobId} description=${description}`);
+  console.log(
+    `[fake report] job=${jobId} category=${category} urgent=${urgent} photos=${photoUrls.length} description=${description}`
+  );
   return { success: true };
 }
