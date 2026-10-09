@@ -36,14 +36,19 @@ export default async function PilotHistoryPage({
       ) : (
         <div className="flex flex-col gap-3">
           {jobs.map((job) => (
-            <PilotJobCard key={job.id} job={job}>
-              <div className="flex items-center gap-2 text-sm text-green-700">
-                <CheckCircle2 className="size-4" />
-                <span>
-                  Completed {job.completedAt ? new Date(job.completedAt).toLocaleString() : ""}
-                </span>
-              </div>
-            </PilotJobCard>
+            <PilotJobCard
+              key={job.id}
+              token={token}
+              job={job}
+              footer={
+                <div className="flex items-center gap-2 text-sm text-green-700">
+                  <CheckCircle2 className="size-4" />
+                  <span>
+                    Completed {job.completedAt ? new Date(job.completedAt).toLocaleString() : ""}
+                  </span>
+                </div>
+              }
+            />
           ))}
         </div>
       )}

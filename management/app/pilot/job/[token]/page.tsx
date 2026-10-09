@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 
 import { PilotJobCard } from "@/components/pilot/job-card";
 import { PilotTabs } from "@/components/pilot/pilot-tabs";
-import { JobActions } from "@/components/pilot/job-actions";
 import { getStaffForToken, getJobsForStaff } from "@/lib/pilot/queries";
 import { hashTokenForLookup } from "@/lib/pilot/links";
 import { usesFakeData } from "@/lib/pilot/mode";
@@ -53,9 +52,7 @@ export default async function PilotJobPage({
             <div className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold text-muted-foreground">Today</h2>
               {todayJobs.map((job) => (
-                <PilotJobCard key={job.id} job={job} isToday>
-                  <JobActions token={token} job={job} staffId={staff.id} />
-                </PilotJobCard>
+                <PilotJobCard key={job.id} token={token} job={job} isToday />
               ))}
             </div>
           ) : null}
@@ -64,9 +61,7 @@ export default async function PilotJobPage({
             <div className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold text-muted-foreground">Later this week</h2>
               {laterJobs.map((job) => (
-                <PilotJobCard key={job.id} job={job}>
-                  <JobActions token={token} job={job} staffId={staff.id} />
-                </PilotJobCard>
+                <PilotJobCard key={job.id} token={token} job={job} />
               ))}
             </div>
           ) : null}
