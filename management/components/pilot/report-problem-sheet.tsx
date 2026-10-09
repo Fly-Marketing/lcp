@@ -5,13 +5,13 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { reportIssue } from "@/lib/pilot/actions";
@@ -47,30 +47,28 @@ export function ReportProblemSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom">
-        <SheetHeader>
-          <SheetTitle>Report a problem</SheetTitle>
-          <SheetDescription>{unitLabel}</SheetDescription>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Report a problem</DialogTitle>
+          <DialogDescription>{unitLabel}</DialogDescription>
+        </DialogHeader>
 
-        <div className="px-4">
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What's wrong?"
-            rows={4}
-            autoFocus
-          />
-        </div>
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="What's wrong?"
+          rows={4}
+          autoFocus
+        />
 
-        <SheetFooter>
+        <DialogFooter>
           <Button disabled={isPending || !description.trim()} onClick={handleSubmit}>
             {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
             Submit report
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
