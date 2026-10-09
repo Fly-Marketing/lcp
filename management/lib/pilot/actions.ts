@@ -3,6 +3,7 @@
 import { getServiceClient } from "@/lib/pilot/supabase";
 import { usesFakeData } from "@/lib/pilot/mode";
 import { fakeAcceptJob, fakeCompleteJob, fakeReportIssue } from "@/lib/pilot/fake-store";
+import { issueCleanerLink } from "@/lib/pilot/links";
 import type { IssueCategory } from "@/lib/pilot/types";
 
 export async function acceptJob(jobId: string) {
@@ -94,4 +95,22 @@ export async function uploadReportPhoto(jobId: string, formData: FormData) {
 
   const { data } = supabase.storage.from("report-photos").getPublicUrl(path);
   return { success: true as const, url: data.publicUrl };
+}
+
+export async function requestNewCleanerLink(staffId: string) {
+  if (usesFakeData()) {
+    // Fake mode: nothing real to issue, just confirm the action "worked."
+    return { success: true as const, url: null };
+  }
+
+  try {
+    const { token } = await issueCleanerLink(staffId);
+    const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/pilot/job/${token}`;
+    return { success: true as const, url };
+  } catch (err) {
+    return {
+      success: false as const,
+      message: err instanceof Error ? err.message : "Failed to issue a new link",
+    };
+  }
 }

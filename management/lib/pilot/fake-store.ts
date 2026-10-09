@@ -1,12 +1,12 @@
 import "server-only";
-import type { PilotJob } from "@/lib/pilot/types";
+import { DEFAULT_CHECKLIST_ITEMS, type PilotJob } from "@/lib/pilot/types";
 
 // In-memory fake data store, used only when PILOT_USE_FAKE_DATA=true.
 // Mutations (accept/complete/report) actually change this in-process state,
 // so the UI behaves like the real thing without ever touching Supabase.
 // Resets on every server restart/redeploy — that's intentional, not a bug.
 
-export const FAKE_STAFF = { id: "fake-staff-1", name: "Eddy (fake)" };
+export const FAKE_STAFF = { id: "fake-staff-1", name: "Eddy (fake)", mobile: "7805551234" };
 
 export const FAKE_TOKEN = "fake-link-1";
 
@@ -42,6 +42,13 @@ const fakeJobs: FakeJob[] = [
     specialRequirements: "Pet-friendly unit, vacuum under the couch.",
     ownerName: "Caitlyn (fake)",
     ownerMobile: "7805550123",
+    // Custom override — tests the per-unit checklist path, not the default fallback.
+    checklistItems: [
+      { id: "hot_tub", title: "Check hot tub chemicals", description: "Test pH and chlorine levels" },
+      { id: "trash", title: "Trash out", description: "All trash and recycling removed" },
+      { id: "linens", title: "Linens changed", description: "Fresh sheets and towels" },
+      { id: "walkthrough", title: "Final walkthrough", description: "Nothing left behind, doors locked" },
+    ],
   },
   {
     id: "fake-job-2",
@@ -60,6 +67,7 @@ const fakeJobs: FakeJob[] = [
     specialRequirements: null,
     ownerName: null,
     ownerMobile: null,
+    checklistItems: DEFAULT_CHECKLIST_ITEMS,
   },
   {
     id: "fake-job-3",
@@ -78,6 +86,7 @@ const fakeJobs: FakeJob[] = [
     specialRequirements: null,
     ownerName: "Caitlyn (fake)",
     ownerMobile: "7805550123",
+    checklistItems: DEFAULT_CHECKLIST_ITEMS,
   },
   {
     id: "fake-job-4",
@@ -96,6 +105,7 @@ const fakeJobs: FakeJob[] = [
     specialRequirements: null,
     ownerName: "Caitlyn (fake)",
     ownerMobile: "7805550123",
+    checklistItems: DEFAULT_CHECKLIST_ITEMS,
   },
 ];
 

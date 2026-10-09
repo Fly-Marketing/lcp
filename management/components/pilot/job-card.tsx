@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Calendar, ChevronRight } from "lucide-react";
+import { Calendar, Clock, ChevronRight } from "lucide-react";
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { PropertyPhoto } from "@/components/pilot/property-photo";
 import type { PilotJob } from "@/lib/pilot/types";
 
 export function PilotJobCard({
@@ -17,36 +17,41 @@ export function PilotJobCard({
 }) {
   return (
     <Link href={`/pilot/job/${token}/view/${job.id}`} className="block">
-      <Card
-        className={`transition-colors active:bg-muted/50 ${isToday ? "border-primary/40" : ""}`}
-      >
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>{job.unitLabel}</CardTitle>
-            {isToday ? (
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                Today
-              </span>
-            ) : null}
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+        <div className="relative">
+          <PropertyPhoto className="h-32 w-full" />
+          {isToday ? (
+            <span className="absolute top-2.5 right-2.5 rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow">
+              Today
+            </span>
+          ) : null}
+        </div>
+
+        <div className="flex flex-col gap-3 p-4">
+          <div>
+            <h3 className="font-heading text-base font-semibold">{job.unitLabel}</h3>
+            <p className="text-sm text-muted-foreground">{job.propertyName}</p>
           </div>
-          <CardDescription>{job.propertyName}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3 text-sm">
-          <div className="flex items-start gap-2 text-muted-foreground">
-            <Calendar className="mt-0.5 size-4 shrink-0" />
-            <span>
-              Checkout {job.checkoutDate} at {job.checkoutTime}
+
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Calendar className="size-4" />
+              Checkout {job.checkoutTime}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="size-4" />
+              Est. {job.expectedHours} hrs
             </span>
           </div>
 
           {footer}
 
-          <div className="flex items-center justify-center gap-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground">
+          <div className="flex items-center justify-center gap-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground">
             View job
             <ChevronRight className="size-4" />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </Link>
   );
 }

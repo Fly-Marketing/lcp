@@ -8,13 +8,13 @@ import {
   fakeGetJobById,
   FAKE_TOKEN,
 } from "@/lib/pilot/fake-store";
-import type { PilotJob } from "@/lib/pilot/types";
+import { DEFAULT_CHECKLIST_ITEMS, type ChecklistItem, type PilotJob } from "@/lib/pilot/types";
 
 const JOB_SELECT =
   "id, unit_id, checkout_date, checkout_time, next_check_in_date, expected_hours, status, completed_at, cancelled_at";
 
 const UNIT_SELECT =
-  "id, unit_name, address, building_id, access_instructions, important_notes, special_requirements, buildings(name, customers(name, mobile))";
+  "id, unit_name, address, building_id, access_instructions, important_notes, special_requirements, checklist_items, buildings(name, customers(name, mobile))";
 
 type RawCustomer = { name: string | null; mobile: string | null };
 
@@ -31,6 +31,7 @@ type RawUnit = {
   access_instructions: string | null;
   important_notes: string | null;
   special_requirements: string | null;
+  checklist_items: ChecklistItem[] | null;
   buildings: RawBuilding | RawBuilding[] | null;
 };
 
@@ -67,6 +68,10 @@ function toPilotJob(job: RawJob, unitById: Map<string, RawUnit>): PilotJob {
     completedAt: job.completed_at,
     ownerName: customer?.name ?? null,
     ownerMobile: customer?.mobile ?? null,
+    checklistItems:
+      unit?.checklist_items && unit.checklist_items.length > 0
+        ? unit.checklist_items
+        : DEFAULT_CHECKLIST_ITEMS,
   };
 }
 
@@ -89,7 +94,7 @@ export async function getStaffForToken(tokenHash: string, rawToken: string) {
 
   const { data: staff } = await supabase
     .from("staff")
-    .select("id, name")
+    .select("id, name, mobile")
     .eq("id", link.staff_id)
     .maybeSingle();
 

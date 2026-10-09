@@ -8,16 +8,24 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CompletionChecklist, type CompletionItem } from "@/components/jobs/completion-checklist";
 import { completeJob } from "@/lib/pilot/actions";
-import { COMPLETION_CHECKLIST_ITEMS } from "@/lib/pilot/types";
+import type { ChecklistItem } from "@/lib/pilot/types";
 
-export function CompletionFlow({ token, jobId }: { token: string; jobId: string }) {
+export function CompletionFlow({
+  token,
+  jobId,
+  checklistItems,
+}: {
+  token: string;
+  jobId: string;
+  checklistItems: ChecklistItem[];
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [items, setItems] = useState<CompletionItem[]>(
-    COMPLETION_CHECKLIST_ITEMS.map((item) => ({ ...item, checked: false }))
+    checklistItems.map((item) => ({ ...item, checked: false }))
   );
 
-  const allChecked = items.every((item) => item.checked);
+  const allChecked = items.length > 0 && items.every((item) => item.checked);
 
   function handleToggle(id: string, checked: boolean) {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, checked } : item)));

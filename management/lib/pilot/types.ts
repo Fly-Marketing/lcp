@@ -1,3 +1,9 @@
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  description?: string;
+}
+
 export interface PilotJob {
   id: string;
   unitLabel: string;
@@ -14,6 +20,7 @@ export interface PilotJob {
   completedAt: string | null;
   ownerName: string | null;
   ownerMobile: string | null;
+  checklistItems: ChecklistItem[];
 }
 
 export type IssueCategory =
@@ -35,10 +42,11 @@ export const ISSUE_CATEGORIES: IssueCategory[] = [
   "Other",
 ];
 
-export const COMPLETION_CHECKLIST_ITEMS = [
+// Fallback used when a unit has no checklist_items override set.
+export const DEFAULT_CHECKLIST_ITEMS: ChecklistItem[] = [
   { id: "trash", title: "Trash out", description: "All trash and recycling removed" },
   { id: "linens", title: "Linens changed", description: "Fresh sheets and towels" },
   { id: "surfaces", title: "Surfaces cleaned", description: "Kitchen, bathroom, counters" },
   { id: "restocked", title: "Restocked", description: "Toiletries, coffee, paper towels" },
   { id: "walkthrough", title: "Final walkthrough", description: "Nothing left behind, doors locked" },
-] as const;
+];
