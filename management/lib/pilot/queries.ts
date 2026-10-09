@@ -1,13 +1,19 @@
 import "server-only";
 import { getServiceClient } from "@/lib/pilot/supabase";
+import { usesFakeData } from "@/lib/pilot/mode";
+import { fakeGetStaffForToken, fakeGetJobsForStaff, FAKE_TOKEN } from "@/lib/pilot/fake-store";
 import type { PilotJob } from "@/lib/pilot/types";
 
-export async function getStaffForToken(tokenHash: string) {
+export async function getStaffForToken(tokenHashOrToken: string, rawToken: string) {
+  if (usesFakeData()) {
+    return fakeGetStaffForToken(rawToken);
+  }
+
   const supabase = getServiceClient();
   const { data: link } = await supabase
     .from("access_links")
     .select("staff_id, expires_at, revoked_at")
-    .eq("token_hash", tokenHash)
+    .eq("token_hash", tokenHashOrToken)
     .eq("persona", "cleaner")
     .maybeSingle();
 
@@ -27,6 +33,10 @@ export async function getStaffForToken(tokenHash: string) {
 // A cleaner's jobs = every open job at any building they're assigned to
 // (building_cleaners), not individually-picked units.
 export async function getJobsForStaff(staffId: string): Promise<PilotJob[]> {
+  if (usesFakeData()) {
+    return fakeGetJobsForStaff(staffId);
+  }
+
   const supabase = getServiceClient();
 
   const { data: assignments } = await supabase
@@ -75,3 +85,5 @@ export async function getJobsForStaff(staffId: string): Promise<PilotJob[]> {
     };
   });
 }
+
+export { FAKE_TOKEN };

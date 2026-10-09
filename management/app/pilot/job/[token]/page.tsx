@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { JobActions } from "@/components/pilot/job-actions";
 import { getStaffForToken, getJobsForStaff } from "@/lib/pilot/queries";
 import { hashTokenForLookup } from "@/lib/pilot/links";
+import { usesFakeData } from "@/lib/pilot/mode";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function PilotJobPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const staff = await getStaffForToken(hashTokenForLookup(token));
+  const staff = await getStaffForToken(hashTokenForLookup(token), token);
 
   if (!staff) {
     notFound();
@@ -24,6 +25,11 @@ export default async function PilotJobPage({
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-4">
+      {usesFakeData() ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
+          FAKE DATA MODE — nothing here touches the real database
+        </div>
+      ) : null}
       <div>
         <p className="text-sm text-muted-foreground">Hi {staff.name},</p>
         <h1 className="font-heading text-xl font-medium">Your turnovers</h1>
