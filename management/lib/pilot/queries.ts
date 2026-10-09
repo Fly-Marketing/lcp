@@ -14,7 +14,14 @@ const JOB_SELECT =
   "id, unit_id, checkout_date, checkout_time, next_check_in_date, expected_hours, status, completed_at, cancelled_at";
 
 const UNIT_SELECT =
-  "id, unit_name, address, building_id, access_instructions, important_notes, special_requirements, buildings(name)";
+  "id, unit_name, address, building_id, access_instructions, important_notes, special_requirements, buildings(name, customers(name, mobile))";
+
+type RawCustomer = { name: string | null; mobile: string | null };
+
+type RawBuilding = {
+  name: string;
+  customers: RawCustomer | RawCustomer[] | null;
+};
 
 type RawUnit = {
   id: string;
@@ -24,7 +31,7 @@ type RawUnit = {
   access_instructions: string | null;
   important_notes: string | null;
   special_requirements: string | null;
-  buildings: { name: string } | { name: string }[] | null;
+  buildings: RawBuilding | RawBuilding[] | null;
 };
 
 type RawJob = {
@@ -41,13 +48,13 @@ type RawJob = {
 
 function toPilotJob(job: RawJob, unitById: Map<string, RawUnit>): PilotJob {
   const unit = job.unit_id ? unitById.get(job.unit_id) : undefined;
-  const building = unit?.buildings ?? null;
-  const buildingName = Array.isArray(building) ? building[0]?.name : building?.name;
+  const building = Array.isArray(unit?.buildings) ? unit?.buildings[0] : unit?.buildings;
+  const customer = Array.isArray(building?.customers) ? building?.customers[0] : building?.customers;
 
   return {
     id: job.id,
     unitLabel: unit?.unit_name ?? "Unknown unit",
-    propertyName: buildingName ?? "Unknown property",
+    propertyName: building?.name ?? "Unknown property",
     address: unit?.address ?? "",
     checkoutDate: job.checkout_date,
     checkoutTime: job.checkout_time,
@@ -58,6 +65,8 @@ function toPilotJob(job: RawJob, unitById: Map<string, RawUnit>): PilotJob {
     importantNotes: unit?.important_notes ?? null,
     specialRequirements: unit?.special_requirements ?? null,
     completedAt: job.completed_at,
+    ownerName: customer?.name ?? null,
+    ownerMobile: customer?.mobile ?? null,
   };
 }
 

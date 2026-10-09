@@ -40,6 +40,8 @@ const fakeJobs: FakeJob[] = [
     accessInstructions: "Lockbox code 4471. Key is on the hook inside the pantry door.",
     importantNotes: "Same-day turnover — guest checks in at 4pm, clean this first.",
     specialRequirements: "Pet-friendly unit, vacuum under the couch.",
+    ownerName: "Caitlyn (fake)",
+    ownerMobile: "7805550123",
   },
   {
     id: "fake-job-2",
@@ -56,6 +58,8 @@ const fakeJobs: FakeJob[] = [
     accessInstructions: "Smart lock, code 8842#.",
     importantNotes: null,
     specialRequirements: null,
+    ownerName: null,
+    ownerMobile: null,
   },
   {
     id: "fake-job-3",
@@ -72,6 +76,8 @@ const fakeJobs: FakeJob[] = [
     accessInstructions: "Front desk has a spare key, ask for Suite 1.",
     importantNotes: "Owner asked for extra towels this week.",
     specialRequirements: null,
+    ownerName: "Caitlyn (fake)",
+    ownerMobile: "7805550123",
   },
   {
     id: "fake-job-4",
@@ -88,6 +94,8 @@ const fakeJobs: FakeJob[] = [
     accessInstructions: "Lockbox code 4471.",
     importantNotes: null,
     specialRequirements: null,
+    ownerName: "Caitlyn (fake)",
+    ownerMobile: "7805550123",
   },
 ];
 

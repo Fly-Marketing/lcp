@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ChevronLeft, Calendar, MapPin, Clock, KeyRound, AlertTriangle, Sparkles } from "lucide-react";
 
 import { JobViewActions } from "@/components/pilot/job-view-actions";
+import { OwnerContact } from "@/components/pilot/owner-contact";
 import { getStaffForToken, getJobById } from "@/lib/pilot/queries";
 import { hashTokenForLookup } from "@/lib/pilot/links";
 
@@ -39,6 +40,8 @@ export default async function PilotJobViewPage({
         <h1 className="font-heading text-2xl font-medium">{job.unitLabel}</h1>
         <p className="text-muted-foreground">{job.propertyName}</p>
       </div>
+
+      <OwnerContact job={job} />
 
       <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-sm">
         <div className="flex items-start gap-2">

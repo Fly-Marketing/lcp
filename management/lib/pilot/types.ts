@@ -12,6 +12,8 @@ export interface PilotJob {
   importantNotes: string | null;
   specialRequirements: string | null;
   completedAt: string | null;
+  ownerName: string | null;
+  ownerMobile: string | null;
 }
 
 export type IssueCategory =
