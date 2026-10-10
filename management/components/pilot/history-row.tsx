@@ -1,13 +1,24 @@
 import Link from "next/link";
 import { CheckCircle2, ChevronRight } from "lucide-react";
-
+import { cn } from "@/lib/utils";
 import type { PilotJob } from "@/lib/pilot/types";
 
-export function HistoryRow({ token, job }: { token: string; job: PilotJob }) {
+export function HistoryRow({
+  token,
+  job,
+  isSelected,
+}: {
+  token: string;
+  job: PilotJob;
+  isSelected?: boolean;
+}) {
   return (
     <Link
-      href={`/pilot/job/${token}/view/${job.id}`}
-      className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:bg-muted/40"
+      href={`/pilot/history/${token}/view/${job.id}`}
+      className={cn(
+        "flex items-center gap-3 rounded-xl border bg-card p-3 transition-colors",
+        isSelected ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted/40"
+      )}
     >
       <div className="flex-1 overflow-hidden">
         <h3 className="truncate text-sm font-semibold">{job.unitLabel}</h3>

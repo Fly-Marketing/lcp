@@ -23,6 +23,16 @@ export interface PilotJob {
   checklistItems: ChecklistItem[];
 }
 
+export interface PilotReport {
+  id: string;
+  category: string;
+  description: string;
+  urgent: boolean;
+  photoUrls: string[];
+  status: string;
+  createdAt: string;
+}
+
 export type IssueCategory =
   | "Supplies Needed"
   | "Maintenance Issue"

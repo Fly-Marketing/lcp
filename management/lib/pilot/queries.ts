@@ -6,9 +6,15 @@ import {
   fakeGetJobsForStaff,
   fakeGetCompletedJobsForStaff,
   fakeGetJobById,
+  fakeGetReportsForJob,
   FAKE_TOKEN,
 } from "@/lib/pilot/fake-store";
-import { DEFAULT_CHECKLIST_ITEMS, type ChecklistItem, type PilotJob } from "@/lib/pilot/types";
+import {
+  DEFAULT_CHECKLIST_ITEMS,
+  type ChecklistItem,
+  type PilotJob,
+  type PilotReport,
+} from "@/lib/pilot/types";
 
 const JOB_SELECT =
   "id, unit_id, checkout_date, checkout_time, next_check_in_date, expected_hours, status, completed_at, cancelled_at";
@@ -179,6 +185,29 @@ export async function getJobById(jobId: string, staffId: string): Promise<PilotJ
 
   if (!job) return null;
   return toPilotJob(job as RawJob, unitById);
+}
+
+export async function getReportsForJob(jobId: string): Promise<PilotReport[]> {
+  if (usesFakeData()) {
+    return fakeGetReportsForJob(jobId);
+  }
+
+  const supabase = getServiceClient();
+  const { data: reports } = await supabase
+    .from("reports")
+    .select("id, category, description, urgent, photo_urls, status, created_at")
+    .eq("job_id", jobId)
+    .order("created_at", { ascending: false });
+
+  return (reports ?? []).map((r) => ({
+    id: r.id,
+    category: r.category,
+    description: r.description,
+    urgent: r.urgent,
+    photoUrls: r.photo_urls ?? [],
+    status: r.status,
+    createdAt: r.created_at,
+  }));
 }
 
 export { FAKE_TOKEN };

@@ -1,5 +1,5 @@
 import "server-only";
-import { DEFAULT_CHECKLIST_ITEMS, type PilotJob } from "@/lib/pilot/types";
+import { DEFAULT_CHECKLIST_ITEMS, type PilotJob, type PilotReport } from "@/lib/pilot/types";
 
 // In-memory fake data store, used only when PILOT_USE_FAKE_DATA=true.
 // Mutations (accept/complete/report) actually change this in-process state,
@@ -107,7 +107,43 @@ const fakeJobs: FakeJob[] = [
     ownerMobile: "7805550123",
     checklistItems: DEFAULT_CHECKLIST_ITEMS,
   },
+  {
+    id: "fake-job-5",
+    unitLabel: "Suite 2",
+    propertyName: "Macewan B&B (fake)",
+    address: "10608 106 St Edmonton, AB T5H 2X8",
+    checkoutDate: addDaysISO(-5),
+    checkoutTime: "11:00",
+    nextCheckInDate: addDaysISO(-5),
+    expectedHours: 2,
+    status: "Completed",
+    claimedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    accessInstructions: "Smart lock, code 8842#.",
+    importantNotes: null,
+    specialRequirements: null,
+    ownerName: "Caitlyn (fake)",
+    ownerMobile: "7805550123",
+    checklistItems: DEFAULT_CHECKLIST_ITEMS,
+  },
 ];
+
+// Keyed by jobId. fake-job-5 starts with a pre-existing report so the
+// "completed clean with a report attached" history state is testable
+// without having to submit one first.
+const fakeReports: Record<string, PilotReport[]> = {
+  "fake-job-5": [
+    {
+      id: "fake-report-1",
+      category: "Maintenance Issue",
+      description: "Bathroom faucet is dripping, needs a plumber.",
+      urgent: false,
+      photoUrls: [],
+      status: "New",
+      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ],
+};
 
 export function fakeGetStaffForToken(token: string) {
   if (token !== FAKE_TOKEN) return null;
@@ -161,9 +197,21 @@ export function fakeReportIssue(
 ) {
   const job = fakeJobs.find((j) => j.id === jobId);
   if (!job) return { success: false, message: "Fake job not found" };
-  // eslint-disable-next-line no-console
-  console.log(
-    `[fake report] job=${jobId} category=${category} urgent=${urgent} photos=${photoUrls.length} description=${description}`
-  );
+
+  const report: PilotReport = {
+    id: `fake-report-${Date.now()}`,
+    category,
+    description,
+    urgent,
+    photoUrls,
+    status: "New",
+    createdAt: new Date().toISOString(),
+  };
+  fakeReports[jobId] = [report, ...(fakeReports[jobId] ?? [])];
+
   return { success: true };
+}
+
+export function fakeGetReportsForJob(jobId: string): PilotReport[] {
+  return fakeReports[jobId] ?? [];
 }
