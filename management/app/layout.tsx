@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "LCP — Love Cleaning & Property Services",
-  description: "Employee operations app for LCP cleaning staff.",
+  description: "Cleaning operations for LCP cleaners, property owners and managers.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { CompletionChecklist, type CompletionItem } from "@/components/jobs/completion-checklist";
+import { CompletionChecklist, type CompletionItem } from "@/components/pilot/completion-checklist";
 import { completeJob } from "@/lib/pilot/actions";
 import type { ChecklistItem } from "@/lib/pilot/types";
 
