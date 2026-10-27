@@ -70,12 +70,23 @@ describe("permissions", () => {
     expect(can(null, "job.view", { buildingId: A })).toBe(false);
   });
 
-  it("job.view is building scoped", () => {
+  it("job.view is building scoped; cleaners only see their own or acceptable unclaimed jobs", () => {
     const cleaner = session([grant("cleaner", A)]);
-    expect(can(cleaner, "job.view", { buildingId: A })).toBe(true);
-    expect(can(cleaner, "job.view", { buildingId: B })).toBe(false);
-    expect(can(cleaner, "job.view", {})).toBe(false);
-    expect(can(session([]), "job.view", { buildingId: A })).toBe(false);
+    expect(can(cleaner, "job.view", { buildingId: A, job: openJob })).toBe(true);
+    expect(can(cleaner, "job.view", { buildingId: A, job: myJob })).toBe(true);
+    // another cleaner's claimed job at the same building is hidden
+    expect(can(cleaner, "job.view", { buildingId: A, job: otherJob })).toBe(false);
+    // cancelled unclaimed job is not an opportunity
+    expect(can(cleaner, "job.view", { buildingId: A, job: { ...openJob, cancelled: true } })).toBe(false);
+    // other building
+    expect(can(cleaner, "job.view", { buildingId: B, job: openJob })).toBe(false);
+    // no job context -> deny for cleaners
+    expect(can(cleaner, "job.view", { buildingId: A })).toBe(false);
+    expect(can(session([]), "job.view", { buildingId: A, job: openJob })).toBe(false);
+    // owners and managers see everything in their buildings, nothing elsewhere
+    expect(can(session([grant("owner", A)]), "job.view", { buildingId: A, job: otherJob })).toBe(true);
+    expect(can(session([grant("owner", A)]), "job.view", { buildingId: B, job: otherJob })).toBe(false);
+    expect(can(session([grant("manager", A)]), "job.view", { buildingId: A, job: otherJob })).toBe(true);
     expect(can(session([], { isAdmin: true }), "job.view", { buildingId: B })).toBe(true);
   });
 
@@ -121,7 +132,7 @@ describe("permissions", () => {
     expect(can(mgr, "report.delete", { buildingId: B, report: { staffId: "staff-2" } })).toBe(false);
     const owner = session([grant("owner", A)], { staffId: null });
     expect(can(owner, "report.edit", { buildingId: A, report: { staffId: "staff-2" } })).toBe(false);
-    expect(can(owner, "report.view", { buildingId: A })).toBe(true);
+    expect(can(owner, "report.view", { buildingId: A, job: myJob })).toBe(true);
   });
 
   it("job.create / unit.edit: owner or manager of the building", () => {

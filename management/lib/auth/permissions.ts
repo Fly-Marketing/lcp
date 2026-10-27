@@ -56,8 +56,15 @@ export function can(session: Session | null, action: Action, ctx: PermissionCont
   switch (action) {
     case "job.view":
     case "report.view":
-    case "photo.view":
-      return session.isAdmin || at().length > 0;
+    case "photo.view": {
+      if (session.isAdmin || isOwnerOrManager) return true;
+      // Cleaners: only jobs assigned to them, or unclaimed jobs they could accept.
+      // Never other cleaners' claimed jobs (those carry access instructions).
+      const job = ctx.job;
+      if (!job || at(["cleaner"]).length === 0) return false;
+      if (session.staffId !== null && job.assignedStaffId === session.staffId) return true;
+      return job.assignedStaffId === null && !job.cancelled && ACCEPTABLE_STATUSES.includes(job.status);
+    }
 
     case "job.accept": {
       const job = ctx.job;

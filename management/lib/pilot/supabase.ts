@@ -9,18 +9,14 @@ function requireEnv(name: string): string {
   return value;
 }
 
-// Publishable-key client, server-only. Every table this touches (access_links,
-// jobs, units, staff, buildings, building_cleaners, reports) carries an "app
-// access" RLS policy — full read/write for public — matching the pattern n8n's
-// sync/dispatch workflows already rely on. That means anyone holding this key
-// (it's not secret — already embedded in client code and n8n workflows) can
-// read/write these tables directly, not just through this app's server code.
-// The trust boundary today is "this code runs on the server", not Postgres
-// policy. Revisit before onboarding real hosts/cleaners.
+// Server-only Supabase client. Uses the service-role key, which bypasses RLS:
+// every read/write in this app goes through server code that authorizes the
+// caller first (see lib/auth/permissions.ts). The key must never be exposed to
+// the browser — no NEXT_PUBLIC_ prefix, and this module is `server-only`.
 export function getServiceClient() {
   return createClient(
     requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
-    { auth: { persistSession: false } }
+    requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    { auth: { persistSession: false, autoRefreshToken: false } }
   );
 }

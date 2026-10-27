@@ -6,6 +6,8 @@ export interface ChecklistItem {
 
 export interface PilotJob {
   id: string;
+  unitId: string | null;
+  buildingId: string | null;
   unitLabel: string;
   propertyName: string;
   address: string;
@@ -17,9 +19,15 @@ export interface PilotJob {
   accessInstructions: string | null;
   importantNotes: string | null;
   specialRequirements: string | null;
+  specialRequest: string | null;
   claimedAt: string | null;
   completedAt: string | null;
   cancelledAt: string | null;
+  assignedStaffId: string | null;
+  // Owner/manager views only; null for cleaners. The customer price, never cleaner pay.
+  price: number | null;
+  assignedCleanerName: string | null;
+  source: string | null;
   ownerName: string | null;
   ownerMobile: string | null;
   checklistItems: ChecklistItem[];
@@ -27,12 +35,15 @@ export interface PilotJob {
 
 export interface PilotReport {
   id: string;
+  jobId: string;
+  staffId: string | null;
   category: string;
   description: string;
   urgent: boolean;
   photoUrls: string[];
   status: string;
   createdAt: string;
+  resolvedAt: string | null;
 }
 
 export type IssueCategory =
