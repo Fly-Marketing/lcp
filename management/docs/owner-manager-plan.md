@@ -4,6 +4,24 @@ Audience: an engineer (or smaller model) implementing this end to end. Follow th
 
 Branch: `feat/owner-manager-roles` (from `main` @ `27a01b69`). App root: `management/` (all paths below are relative to it).
 
+## Implementation status (2026-10-27)
+
+Built on `feat/owner-manager-roles` (not yet pushed): Passes 0-4 in code, plus the migrations and two n8n workflows.
+
+| Area | State |
+|---|---|
+| Airtable portal | Deleted |
+| Auth (SMS code + trusted devices, phone change, admin recovery) | Built and unit tested |
+| Permission matrix + service layer, cross-account tests (105 unit tests) | Done |
+| Owner properties board, Add Job, unit editing, jobs + price history, team, admin | Built; verified in fake mode for every role |
+| Migrations 0001-0003 | **Applied to the live project** (additive). Snapshot first: `snapshot_20261026` schema + `~/lcp-backups/2026-10-26/` |
+| Migration 0004 (lockdown) | **Not applied** (see human steps) |
+| n8n `LCP - Auth OTP SMS` | Published; rejects requests without the shared secret |
+| n8n `LCP - Notification Outbox Dispatcher` | Created, **not published** (Postgres credential uses an IPv6-only host) |
+| n8n sync workflow | Draft guarded against touching `owner_manual` jobs (still unpublished, as before) |
+
+Remaining human steps are listed in the final report in the session and in README "Security notes".
+
 ## 0. Ground rules
 
 1. **Read first**: `AGENTS.md` says this Next.js (16.3) differs from what you know. Before writing any code that touches routing, `cookies()`, server actions, redirects or `proxy`, read the matching guide in `node_modules/next/dist/docs/01-app/`. `cookies()` and `params` are async in this version.
