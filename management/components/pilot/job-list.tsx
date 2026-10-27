@@ -28,11 +28,11 @@ function formatCleaningDay(date: string) {
 }
 
 export function JobList({
-  token,
+  hrefBase,
   jobs,
   selectedJobId,
 }: {
-  token: string;
+  hrefBase: string;
   jobs: PilotJob[];
   selectedJobId?: string;
 }) {
@@ -82,7 +82,7 @@ export function JobList({
               {todayJobs.map((job) => (
                 <PilotJobCard
                   key={job.id}
-                  token={token}
+                  hrefBase={hrefBase}
                   job={job}
                   isToday
                   isSelected={job.id === selectedJobId}
@@ -114,7 +114,7 @@ export function JobList({
               {nextCleaningDayJobs.map((job) => (
                 <PilotJobCard
                   key={job.id}
-                  token={token}
+                  hrefBase={hrefBase}
                   job={job}
                   isSelected={job.id === selectedJobId}
                 />
@@ -144,7 +144,7 @@ export function JobList({
               {laterJobs.map((job) => (
                 <PilotJobCard
                   key={job.id}
-                  token={token}
+                  hrefBase={hrefBase}
                   job={job}
                   isSelected={job.id === selectedJobId}
                 />

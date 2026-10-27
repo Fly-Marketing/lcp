@@ -41,13 +41,23 @@ function moveMonth(date: Date, offset: number) {
 }
 
 export function HistoryList({
-  token,
+  hrefBase,
   jobs,
   selectedJobId,
+  variant = "cleaner",
+  title = "My jobs",
+  subtitle = "Your to-do and completed cleans",
+  todoLabel = "To do",
+  emptyTodoHint = "Accept one from Today to move it here.",
 }: {
-  token: string;
+  hrefBase: string;
   jobs: PilotJob[];
   selectedJobId?: string;
+  variant?: "cleaner" | "staff";
+  title?: string;
+  subtitle?: string;
+  todoLabel?: string;
+  emptyTodoHint?: string;
 }) {
   const currentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const [finishedMonth, setFinishedMonth] = useState(currentMonth);
@@ -66,8 +76,8 @@ export function HistoryList({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="font-heading text-2xl font-semibold">My jobs</h1>
-        <p className="text-sm text-muted-foreground">Your to-do and completed cleans</p>
+        <h1 className="font-heading text-2xl font-semibold">{title}</h1>
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
       </div>
 
       <button
@@ -82,7 +92,7 @@ export function HistoryList({
         className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
       >
         <CalendarDays className="size-4 text-primary" />
-        <span className="font-medium">To do</span>
+        <span className="font-medium">{todoLabel}</span>
         <span className="ml-auto rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
           {currentJobs.length} {currentJobs.length === 1 ? "job" : "jobs"}
         </span>
@@ -97,7 +107,8 @@ export function HistoryList({
             currentJobs.map((job) => (
               <HistoryRow
                 key={job.id}
-                token={token}
+                hrefBase={hrefBase}
+                variant={variant}
                 job={job}
                 isSelected={job.id === selectedJobId}
               />
@@ -109,7 +120,7 @@ export function HistoryList({
               </span>
               <div>
                 <p className="text-sm font-semibold text-foreground">Nothing to do yet</p>
-                <p className="text-xs text-muted-foreground">Accept one from Today to move it here.</p>
+                <p className="text-xs text-muted-foreground">{emptyTodoHint}</p>
               </div>
             </div>
           )}
@@ -177,7 +188,8 @@ export function HistoryList({
             finishedJobs.map((job) => (
               <HistoryRow
                 key={job.id}
-                token={token}
+                hrefBase={hrefBase}
+                variant={variant}
                 job={job}
                 isSelected={job.id === selectedJobId}
               />

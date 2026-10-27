@@ -1,103 +1,54 @@
 "use server";
 
-import { getServiceClient } from "@/lib/pilot/supabase";
-import { usesFakeData } from "@/lib/pilot/mode";
-import {
-  fakeAcceptJob,
-  fakeCompleteJob,
-  fakeDeleteReport,
-  fakeReportIssue,
-  fakeUpdateCompletedJob,
-  fakeUpdateReport,
-} from "@/lib/pilot/fake-store";
-import { getStaffForToken } from "@/lib/pilot/queries";
-import { hashTokenForLookup, issueCleanerLink } from "@/lib/pilot/links";
+import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { requireSession } from "@/lib/auth/session";
+import { kickNotifications } from "@/lib/auth/sender";
+import * as svc from "@/lib/pilot/service";
 import type { IssueCategory } from "@/lib/pilot/types";
 
-export async function acceptJob(token: string, jobId: string) {
-  const staff = await getStaffForToken(hashTokenForLookup(token), token);
-  if (!staff) return { success: false, message: "This access link is no longer valid" };
+// Thin server-action wrappers: resolve the session from the trusted-device cookie, then
+// delegate to the service layer, which authorizes the specific building/job. No identity
+// (staff id, account id) ever comes from the client.
 
-  if (usesFakeData()) {
-    return fakeAcceptJob(jobId);
-  }
+type Result = { success: true } | { success: false; message: string };
 
-  const supabase = getServiceClient();
-  const { error } = await supabase
-    .from("jobs")
-    .update({
-      status: "Claimed",
-      claimed_at: new Date().toISOString(),
-      assigned_staff_id: staff.id,
-    })
-    .eq("id", jobId);
-
-  if (error) return { success: false, message: error.message };
-  return { success: true };
+function refresh(...paths: string[]) {
+  for (const p of paths) revalidatePath(p);
 }
 
-export async function completeJob(jobId: string) {
-  if (usesFakeData()) {
-    return fakeCompleteJob(jobId);
-  }
-
-  const supabase = getServiceClient();
-  const { error } = await supabase
-    .from("jobs")
-    .update({ status: "Completed", completed_at: new Date().toISOString() })
-    .eq("id", jobId);
-
-  if (error) return { success: false, message: error.message };
-  return { success: true };
+export async function acceptJob(jobId: string): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.acceptJob(session, jobId);
+  if (r.success) refresh("/pilot/today", "/pilot/my-jobs");
+  return r;
 }
 
-export async function updateCompletedJob(
-  jobId: string,
-  state: string
-) {
-  if (!["Completed", "Needs attention", "Not clean"].includes(state)) {
-    return { success: false, message: "Choose a valid cleaning result" };
-  }
+export async function completeJob(jobId: string): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.completeJob(session, jobId);
+  if (r.success) refresh("/pilot/today", "/pilot/my-jobs", "/pilot/properties", "/pilot/jobs");
+  return r;
+}
 
-  if (usesFakeData()) {
-    return fakeUpdateCompletedJob(jobId, state);
-  }
-
-  const supabase = getServiceClient();
-  const { error } = await supabase
-    .from("jobs")
-    .update({ status: state })
-    .eq("id", jobId)
-    .not("completed_at", "is", null);
-
-  if (error) return { success: false, message: error.message };
-  return { success: true };
+export async function updateCompletedJob(jobId: string, state: string): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.setCompletedJobResult(session, jobId, state);
+  if (r.success) refresh("/pilot/my-jobs", "/pilot/properties", "/pilot/jobs");
+  return r;
 }
 
 export async function reportIssue(
   jobId: string,
-  staffId: string,
   description: string,
   category: IssueCategory,
   urgent: boolean,
-  photoUrls: string[]
-) {
-  if (usesFakeData()) {
-    return fakeReportIssue(jobId, description, category, urgent, photoUrls);
-  }
-
-  const supabase = getServiceClient();
-  const { error } = await supabase.from("reports").insert({
-    job_id: jobId,
-    staff_id: staffId,
-    description,
-    category,
-    urgent,
-    photo_urls: photoUrls.length > 0 ? photoUrls : null,
-  });
-
-  if (error) return { success: false, message: error.message };
-  return { success: true };
+  photoPaths: string[]
+): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.createReport(session, jobId, { description, category, urgent, photoPaths });
+  if (r.success) refresh("/pilot/my-jobs", "/pilot/properties", "/pilot/jobs");
+  return r;
 }
 
 export async function updateReport(
@@ -105,92 +56,110 @@ export async function updateReport(
   description: string,
   category: IssueCategory,
   urgent: boolean,
-  photoUrls: string[]
-) {
-  if (!description.trim()) {
-    return { success: false, message: "Describe the issue before saving" };
-  }
-
-  if (usesFakeData()) {
-    return fakeUpdateReport(reportId, description, category, urgent, photoUrls);
-  }
-
-  const supabase = getServiceClient();
-  const { error } = await supabase
-    .from("reports")
-    .update({
-      description: description.trim(),
-      category,
-      urgent,
-      photo_urls: photoUrls.length > 0 ? photoUrls : null,
-    })
-    .eq("id", reportId);
-
-  if (error) return { success: false, message: error.message };
-  return { success: true };
+  photoPaths: string[]
+): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.editReport(session, reportId, { description, category, urgent, photoPaths });
+  if (r.success) refresh("/pilot/my-jobs", "/pilot/properties", "/pilot/jobs");
+  return r;
 }
 
-export async function deleteReport(reportId: string) {
-  if (usesFakeData()) {
-    return fakeDeleteReport(reportId);
-  }
-
-  const supabase = getServiceClient();
-  const { error } = await supabase.from("reports").delete().eq("id", reportId);
-
-  if (error) return { success: false, message: error.message };
-  return { success: true };
+export async function deleteReport(reportId: string): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.removeReport(session, reportId);
+  if (r.success) refresh("/pilot/my-jobs", "/pilot/properties", "/pilot/jobs");
+  return r;
 }
 
-const MAX_PHOTO_BYTES = 8 * 1024 * 1024; // 8MB
-const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+export async function resolveReport(reportId: string): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.resolveReportAction(session, reportId);
+  if (r.success) refresh("/pilot/properties", "/pilot/jobs");
+  return r;
+}
 
-export async function uploadReportPhoto(jobId: string, formData: FormData) {
+export async function uploadReportPhoto(
+  jobId: string,
+  formData: FormData
+): Promise<{ success: true; path: string; previewUrl: string | null } | { success: false; message: string }> {
+  const session = await requireSession();
   const file = formData.get("photo");
-  if (!(file instanceof File)) {
-    return { success: false as const, message: "No file provided" };
-  }
-  if (file.size > MAX_PHOTO_BYTES) {
-    return { success: false as const, message: "Photo is too large (max 8MB)" };
-  }
-  if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
-    return { success: false as const, message: "Unsupported photo type" };
-  }
-
-  if (usesFakeData()) {
-    // Fake mode: no real upload, just echo a placeholder URL so the UI flow works end-to-end.
-    return { success: true as const, url: `https://example.com/fake-photo-${Date.now()}.jpg` };
-  }
-
-  const supabase = getServiceClient();
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const path = `${jobId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-  const { error } = await supabase.storage.from("report-photos").upload(path, file, {
-    contentType: file.type,
-    upsert: false,
-  });
-
-  if (error) return { success: false as const, message: error.message };
-
-  const { data } = supabase.storage.from("report-photos").getPublicUrl(path);
-  return { success: true as const, url: data.publicUrl };
+  if (!(file instanceof File)) return { success: false, message: "No file provided" };
+  const r = await svc.uploadReportPhoto(session, jobId, file);
+  if (!r.success) return r;
+  return { success: true, path: r.data.path, previewUrl: r.data.previewUrl };
 }
 
-export async function requestNewCleanerLink(staffId: string) {
-  if (usesFakeData()) {
-    // Fake mode: nothing real to issue, just confirm the action "worked."
-    return { success: true as const, url: null };
-  }
+// ---- owner / manager ----
 
-  try {
-    const { token } = await issueCleanerLink(staffId);
-    const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/pilot/job/${token}`;
-    return { success: true as const, url };
-  } catch (err) {
-    return {
-      success: false as const,
-      message: err instanceof Error ? err.message : "Failed to issue a new link",
-    };
+export async function createCleaningJob(input: {
+  unitId: string;
+  date: string;
+  time?: string | null;
+  specialRequest?: string | null;
+  idempotencyKey: string;
+}): Promise<{ success: true; jobId: string } | { success: false; message: string }> {
+  const session = await requireSession();
+  const r = await svc.createManualJob(session, input);
+  if (!r.success) return r;
+  refresh("/pilot/properties", "/pilot/jobs");
+  // Notifications are delivered by n8n from the outbox; nudge it without delaying the response.
+  after(() => kickNotifications({ jobId: r.data.jobId }));
+  return { success: true, jobId: r.data.jobId };
+}
+
+export async function saveUnitDetails(
+  unitId: string,
+  input: {
+    accessInstructions?: string | null;
+    importantNotes?: string | null;
+    specialRequirements?: string | null;
+    checklistItems?: unknown;
   }
+): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.updateUnitDetails(session, unitId, input);
+  if (r.success) refresh("/pilot/properties", "/pilot/jobs", "/pilot/today");
+  return r;
+}
+
+export async function saveJobPrice(jobId: string, price: number | string, reason: string | null): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.setJobPrice(session, jobId, price, reason);
+  if (r.success) refresh("/pilot/jobs");
+  return r;
+}
+
+export async function addCleaner(
+  buildingId: string,
+  input: { name: string; phone: string; role?: "primary" | "backup" }
+): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.addCleanerToBuilding(session, buildingId, input);
+  if (r.success) refresh("/pilot/team");
+  return r;
+}
+
+export async function removeCleaner(buildingId: string, staffId: string): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.removeCleanerFromBuilding(session, buildingId, staffId);
+  if (r.success) refresh("/pilot/team");
+  return r;
+}
+
+export async function assignManager(
+  buildingId: string,
+  input: { name: string; phone: string; canEditPrice: boolean; isPrimary: boolean }
+): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.assignBuildingManager(session, buildingId, input);
+  if (r.success) refresh("/pilot/team");
+  return r;
+}
+
+export async function removeManager(buildingId: string, accountId: string): Promise<Result> {
+  const session = await requireSession();
+  const r = await svc.removeBuildingManager(session, buildingId, accountId);
+  if (r.success) refresh("/pilot/team");
+  return r;
 }

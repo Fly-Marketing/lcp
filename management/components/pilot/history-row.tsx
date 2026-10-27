@@ -1,29 +1,42 @@
 import Link from "next/link";
 import { CheckCircle2, ChevronRight, CircleDot, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ownerStatus } from "@/lib/pilot/status";
 import type { PilotJob } from "@/lib/pilot/types";
 
 export function HistoryRow({
-  token,
+  hrefBase,
   job,
   isSelected,
+  variant = "cleaner",
 }: {
-  token: string;
+  hrefBase: string;
   job: PilotJob;
   isSelected?: boolean;
+  variant?: "cleaner" | "staff";
 }) {
-  const state = job.cancelledAt ? "Cancelled" : job.completedAt ? "Completed" : "To do";
-  const StateIcon = state === "Cancelled" ? XCircle : state === "Completed" ? CheckCircle2 : CircleDot;
+  const staffStatus = ownerStatus(job);
+  const state =
+    variant === "staff"
+      ? staffStatus
+      : job.cancelledAt
+        ? "Cancelled"
+        : job.completedAt
+          ? "Completed"
+          : "To do";
+  const StateIcon = state === "Cancelled" ? XCircle : state === "Completed" || state === "Clean" ? CheckCircle2 : CircleDot;
   const stateClass =
     state === "Cancelled"
       ? "text-red-700"
-      : state === "Completed"
-        ? "text-green-700"
+      : state === "Flagged"
+        ? "text-amber-700"
+        : state === "Completed" || state === "Clean"
+          ? "text-green-700"
         : "text-primary";
 
   return (
     <Link
-      href={`/pilot/history/${token}/view/${job.id}`}
+      href={`${hrefBase}/${job.id}`}
       className={cn(
         "flex items-center gap-3 rounded-xl border bg-card p-3 transition-colors",
         isSelected ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted/40"
@@ -31,7 +44,10 @@ export function HistoryRow({
     >
       <div className="flex-1 overflow-hidden">
         <h3 className="truncate text-sm font-semibold">{job.unitLabel}</h3>
-        <p className="truncate text-xs text-muted-foreground">{job.propertyName}</p>
+        <p className="truncate text-xs text-muted-foreground">
+          {job.propertyName}
+          {variant === "staff" && job.assignedCleanerName ? ` · ${job.assignedCleanerName}` : ""}
+        </p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {job.checkoutDate ? new Date(job.checkoutDate).toLocaleDateString() : ""}
           {job.checkoutTime ? ` · Checkout ${job.checkoutTime}` : ""}

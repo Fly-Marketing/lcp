@@ -33,8 +33,9 @@ export async function sendOtp(to: string, code: string, idempotencyKey: string):
   return ok;
 }
 
-// Kick the notification dispatcher for an outbox row. Best effort: n8n also polls pending rows.
-export async function kickNotification(outboxId: string): Promise<void> {
+// Nudge the notification dispatcher. Best effort: n8n also polls pending outbox rows, and the
+// outbox's dedupe_key makes repeated delivery attempts safe.
+export async function kickNotifications(hint: Record<string, string> = {}): Promise<void> {
   if (usesFakeData()) return;
-  await post("N8N_NOTIFY_WEBHOOK_URL", { outboxId });
+  await post("N8N_NOTIFY_WEBHOOK_URL", hint);
 }

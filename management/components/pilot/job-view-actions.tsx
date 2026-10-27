@@ -11,7 +11,7 @@ import { CompletionFlow } from "@/components/pilot/completion-flow";
 import { acceptJob } from "@/lib/pilot/actions";
 import type { PilotJob } from "@/lib/pilot/types";
 
-export function JobViewActions({ token, job, staffId }: { token: string; job: PilotJob; staffId: string }) {
+export function JobViewActions({ job }: { job: PilotJob }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showReport, setShowReport] = useState(false);
@@ -20,7 +20,7 @@ export function JobViewActions({ token, job, staffId }: { token: string; job: Pi
   function handleAccept() {
     setError(null);
     startTransition(async () => {
-      const result = await acceptJob(token, job.id);
+      const result = await acceptJob(job.id);
       if (!result.success) {
         const message = result.message ?? "Failed to accept job";
         setError(message);
@@ -28,7 +28,7 @@ export function JobViewActions({ token, job, staffId }: { token: string; job: Pi
         return;
       }
       toast.success("Job accepted");
-      router.push(`/pilot/history/${token}/view/${job.id}`);
+      router.push(`/pilot/my-jobs/${job.id}`);
     });
   }
 
@@ -44,7 +44,7 @@ export function JobViewActions({ token, job, staffId }: { token: string; job: Pi
       ) : null}
 
       {job.status === "Claimed" ? (
-        <CompletionFlow token={token} jobId={job.id} checklistItems={job.checklistItems} />
+        <CompletionFlow jobId={job.id} checklistItems={job.checklistItems} />
       ) : null}
 
       {!job.cancelledAt ? (
@@ -55,7 +55,6 @@ export function JobViewActions({ token, job, staffId }: { token: string; job: Pi
 
       <ReportProblemDialog
         jobId={job.id}
-        staffId={staffId}
         unitLabel={job.unitLabel}
         open={showReport}
         onOpenChange={setShowReport}

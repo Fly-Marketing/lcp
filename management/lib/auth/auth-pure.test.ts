@@ -24,7 +24,7 @@ describe("safeReturnTo", () => {
   });
   it.each(["//evil.com", "https://x.com", "/\\evil", "/other", "", "/pilot/../x://y", "/pilot/a\nb", null])(
     "rejects %s",
-    (raw) => expect(safeReturnTo(raw as string)).toBe("/pilot/today")
+    (raw) => expect(safeReturnTo(raw as string)).toBe("/pilot/start")
   );
 });
 

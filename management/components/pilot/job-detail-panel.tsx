@@ -16,25 +16,21 @@ import { OwnerContact } from "@/components/pilot/owner-contact";
 import type { PilotJob } from "@/lib/pilot/types";
 
 export function JobDetailPanel({
-  token,
   job,
-  staffId,
   showBackLink,
   backHref,
   backLabel,
 }: {
-  token: string;
   job: PilotJob;
-  staffId: string;
   showBackLink?: boolean;
-  backHref?: string;
+  backHref: string;
   backLabel?: string;
 }) {
   return (
     <div className="flex flex-col gap-4">
       {showBackLink ? (
         <Link
-          href={backHref ?? `/pilot/job/${token}`}
+          href={backHref}
           className="flex items-center gap-1 text-sm text-muted-foreground md:hidden"
         >
           <ChevronLeft className="size-4" />
@@ -100,7 +96,7 @@ export function JobDetailPanel({
         </div>
       ) : null}
 
-      {!job.cancelledAt ? <JobViewActions token={token} job={job} staffId={staffId} /> : null}
+      {!job.cancelledAt ? <JobViewActions job={job} /> : null}
     </div>
   );
 }

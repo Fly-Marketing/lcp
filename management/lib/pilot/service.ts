@@ -153,7 +153,7 @@ async function mapReports(rows: ReportRow[]): Promise<PilotReport[]> {
       category: r.category,
       description: r.description,
       urgent: r.urgent,
-      photoUrls: (await Promise.all(r.photoPaths.map((p) => repo.signedPhotoUrl(p)))).filter((u): u is string => !!u),
+      photos: await Promise.all(r.photoPaths.map(async (p) => ({ path: p, url: await repo.signedPhotoUrl(p) }))),
       status: r.status,
       createdAt: r.createdAt,
       resolvedAt: r.resolvedAt,

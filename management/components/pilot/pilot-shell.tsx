@@ -3,25 +3,41 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Briefcase, User } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  ClipboardList,
+  Home,
+  LogOut,
+  ShieldCheck,
+  User,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { signOutAction } from "@/app/pilot/signin/actions";
+import type { NavItem, NavKey } from "@/lib/auth/nav";
+
+const ICONS: Record<NavKey, LucideIcon> = {
+  today: Home,
+  "my-jobs": Briefcase,
+  properties: Building2,
+  jobs: ClipboardList,
+  team: Users,
+  account: User,
+  admin: ShieldCheck,
+};
 
 export function PilotShell({
-  token,
-  staffName,
+  items,
+  displayName,
   children,
 }: {
-  token: string;
-  staffName: string;
+  items: NavItem[];
+  displayName: string;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-
-  const navItems = [
-    { href: `/pilot/job/${token}`, label: "Today", icon: Home },
-    { href: `/pilot/history/${token}`, label: "My Jobs", icon: Briefcase },
-    { href: `/pilot/account/${token}`, label: "Account", icon: User },
-  ];
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -35,9 +51,9 @@ export function PilotShell({
           <Image src="/lcp-logo.svg" alt="LCP" width={28} height={28} />
           <span className="font-heading text-sm font-semibold">LCP</span>
         </div>
-        <nav className="flex flex-col gap-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
+        <nav className="flex flex-1 flex-col gap-1">
+          {items.map((item) => {
+            const Icon = ICONS[item.key];
             const active = isActive(item.href);
             return (
               <Link
@@ -56,6 +72,15 @@ export function PilotShell({
             );
           })}
         </nav>
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <LogOut className="size-4" />
+            Sign out
+          </button>
+        </form>
       </aside>
 
       <div className="flex min-h-dvh flex-1 flex-col">
@@ -65,12 +90,12 @@ export function PilotShell({
             <Image src="/lcp-logo.svg" alt="LCP" width={24} height={24} />
             <span className="font-heading text-sm font-semibold">LCP</span>
           </div>
-          <span className="text-sm text-muted-foreground">Hi, {staffName}</span>
+          <span className="text-sm text-muted-foreground">Hi, {displayName}</span>
         </header>
 
         {/* Desktop top bar */}
         <header className="hidden items-center justify-end border-b border-border bg-background px-6 py-3 md:flex">
-          <span className="text-sm text-muted-foreground">Hi, {staffName}</span>
+          <span className="text-sm text-muted-foreground">Hi, {displayName}</span>
         </header>
 
         <main className="mx-auto w-full max-w-md flex-1 p-4 pb-20 md:max-w-5xl md:p-6 md:pb-6">
@@ -79,8 +104,8 @@ export function PilotShell({
 
         {/* Mobile bottom nav */}
         <nav className="fixed inset-x-0 bottom-0 flex border-t border-border bg-background md:hidden">
-          {navItems.map((item) => {
-            const Icon = item.icon;
+          {items.map((item) => {
+            const Icon = ICONS[item.key];
             const active = isActive(item.href);
             return (
               <Link

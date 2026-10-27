@@ -1,30 +1,7 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
-import { PilotShell } from "@/components/pilot/pilot-shell";
-import { HistoryList } from "@/components/pilot/history-list";
-import { MasterDetail } from "@/components/pilot/master-detail";
-import { getStaffForToken, getMyJobsForStaff } from "@/lib/pilot/queries";
-import { hashTokenForLookup } from "@/lib/pilot/links";
-
-export const dynamic = "force-dynamic";
-
-export default async function PilotHistoryPage({
-  params,
-}: {
-  params: Promise<{ token: string }>;
-}) {
-  const { token } = await params;
-  const staff = await getStaffForToken(hashTokenForLookup(token), token);
-
-  if (!staff) {
-    notFound();
-  }
-
-  const jobs = await getMyJobsForStaff(staff.id);
-
-  return (
-    <PilotShell token={token} staffName={staff.name}>
-      <MasterDetail list={<HistoryList token={token} jobs={jobs} />} />
-    </PilotShell>
-  );
+// Legacy token links. The token is intentionally ignored (and never logged): everyone now
+// signs in with an SMS code on a trusted device.
+export default function LegacyLinkPage() {
+  redirect("/pilot/signin");
 }

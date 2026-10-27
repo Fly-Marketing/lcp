@@ -1,4 +1,4 @@
-export const DEFAULT_RETURN_TO = "/pilot/today";
+export const DEFAULT_RETURN_TO = "/pilot/start";
 
 // Only same-site pilot paths are allowed; anything else falls back to the default.
 export function safeReturnTo(raw: string | null | undefined): string {

@@ -40,7 +40,7 @@ export interface PilotReport {
   category: string;
   description: string;
   urgent: boolean;
-  photoUrls: string[];
+  photos: { path: string; url: string | null }[];
   status: string;
   createdAt: string;
   resolvedAt: string | null;

@@ -11,11 +11,9 @@ import { completeJob } from "@/lib/pilot/actions";
 import type { ChecklistItem } from "@/lib/pilot/types";
 
 export function CompletionFlow({
-  token,
   jobId,
   checklistItems,
 }: {
-  token: string;
   jobId: string;
   checklistItems: ChecklistItem[];
 }) {
@@ -39,7 +37,7 @@ export function CompletionFlow({
         return;
       }
       toast.success("Job marked complete");
-      router.push(`/pilot/history/${token}/view/${jobId}`);
+      router.push(`/pilot/my-jobs/${jobId}`);
     });
   }
 

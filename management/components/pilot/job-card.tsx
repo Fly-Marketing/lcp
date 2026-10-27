@@ -4,20 +4,20 @@ import { cn } from "@/lib/utils";
 import type { PilotJob } from "@/lib/pilot/types";
 
 export function PilotJobCard({
-  token,
+  hrefBase,
   job,
   isToday,
   isSelected,
   footer,
 }: {
-  token: string;
+  hrefBase: string;
   job: PilotJob;
   isToday?: boolean;
   isSelected?: boolean;
   footer?: React.ReactNode;
 }) {
   return (
-    <Link href={`/pilot/job/${token}/view/${job.id}`} className="block">
+    <Link href={`${hrefBase}/${job.id}`} className="block">
       <div
         className={cn(
           "flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm transition-colors",

@@ -43,17 +43,15 @@ function formatEdmontonDateTime(dateIso: string) {
 }
 
 export function HistoryDetailPanel({
-  token,
   job,
   reports,
   showBackLink,
-  staffId,
+  backHref,
 }: {
-  token: string;
   job: PilotJob;
   reports: PilotReport[];
   showBackLink?: boolean;
-  staffId: string;
+  backHref: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -119,7 +117,7 @@ export function HistoryDetailPanel({
     <div className="flex flex-col gap-4">
       {showBackLink ? (
         <Link
-          href={`/pilot/history/${token}`}
+          href={backHref}
           className="flex items-center gap-1 text-sm text-muted-foreground md:hidden"
         >
           <ChevronLeft className="size-4" />
@@ -263,9 +261,9 @@ export function HistoryDetailPanel({
                   <span>{report.description}</span>
                 </p>
 
-                {report.photoUrls.length > 0 ? (
+                {report.photos.some((p) => p.url) ? (
                   <div className="flex flex-wrap gap-2">
-                    {report.photoUrls.map((url) => (
+                    {report.photos.flatMap((p) => (p.url ? [p.url] : [])).map((url) => (
                       <a
                         key={url}
                         href={url}
@@ -291,7 +289,6 @@ export function HistoryDetailPanel({
       <ReportProblemDialog
         key={reportToEdit?.id ?? "new-report"}
         jobId={job.id}
-        staffId={staffId}
         unitLabel={job.unitLabel}
         open={showReportDialog}
         onOpenChange={setShowReportDialog}

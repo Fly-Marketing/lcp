@@ -28,7 +28,6 @@ import { ISSUE_CATEGORIES, type IssueCategory, type PilotReport } from "@/lib/pi
 
 export function ReportProblemDialog({
   jobId,
-  staffId,
   unitLabel,
   open,
   onOpenChange,
@@ -36,7 +35,6 @@ export function ReportProblemDialog({
   initialReport,
 }: {
   jobId: string;
-  staffId: string;
   unitLabel: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -50,9 +48,9 @@ export function ReportProblemDialog({
     (initialReport?.category as IssueCategory | undefined) ?? "Other"
   );
   const [urgent, setUrgent] = useState(initialReport?.urgent ?? false);
-  const [photos, setPhotos] = useState<{ url: string; previewName: string }[]>(
-    (initialReport?.photoUrls ?? []).map((url, index) => ({
-      url,
+  const [photos, setPhotos] = useState<{ path: string; previewName: string }[]>(
+    (initialReport?.photos ?? []).map((photo, index) => ({
+      path: photo.path,
       previewName: `Photo ${index + 1}`,
     }))
   );
@@ -63,8 +61,8 @@ export function ReportProblemDialog({
     setCategory((initialReport?.category as IssueCategory | undefined) ?? "Other");
     setUrgent(initialReport?.urgent ?? false);
     setPhotos(
-      (initialReport?.photoUrls ?? []).map((url, index) => ({
-        url,
+      (initialReport?.photos ?? []).map((photo, index) => ({
+        path: photo.path,
         previewName: `Photo ${index + 1}`,
       }))
     );
@@ -85,20 +83,20 @@ export function ReportProblemDialog({
       toast.error(result.message ?? "Failed to upload photo");
       return;
     }
-    setPhotos((prev) => [...prev, { url: result.url, previewName: file.name }]);
+    setPhotos((prev) => [...prev, { path: result.path, previewName: file.name }]);
   }
 
-  function removePhoto(url: string) {
-    setPhotos((prev) => prev.filter((p) => p.url !== url));
+  function removePhoto(path: string) {
+    setPhotos((prev) => prev.filter((p) => p.path !== path));
   }
 
   function handleSubmit() {
     if (!description.trim()) return;
     startTransition(async () => {
-      const photoUrls = photos.map((photo) => photo.url);
+      const photoPaths = photos.map((photo) => photo.path);
       const result = initialReport
-        ? await updateReport(initialReport.id, description, category, urgent, photoUrls)
-        : await reportIssue(jobId, staffId, description, category, urgent, photoUrls);
+        ? await updateReport(initialReport.id, description, category, urgent, photoPaths)
+        : await reportIssue(jobId, description, category, urgent, photoPaths);
       if (!result.success) {
         toast.error(result.message ?? `Failed to ${initialReport ? "update" : "submit"} report`);
         return;
@@ -169,13 +167,13 @@ export function ReportProblemDialog({
             <div className="flex flex-wrap gap-2">
               {photos.map((photo) => (
                 <div
-                  key={photo.url}
+                  key={photo.path}
                   className="relative flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-muted text-xs"
                 >
                   <span className="truncate px-1 text-center">{photo.previewName}</span>
                   <button
                     type="button"
-                    onClick={() => removePhoto(photo.url)}
+                    onClick={() => removePhoto(photo.path)}
                     className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
                   >
                     <X className="size-3" />
