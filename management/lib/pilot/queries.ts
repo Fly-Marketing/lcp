@@ -5,6 +5,7 @@ import {
   fakeGetStaffForToken,
   fakeGetJobsForStaff,
   fakeGetCompletedJobsForStaff,
+  fakeGetMyJobsForStaff,
   fakeGetJobById,
   fakeGetReportsForJob,
   FAKE_TOKEN,
@@ -17,7 +18,7 @@ import {
 } from "@/lib/pilot/types";
 
 const JOB_SELECT =
-  "id, unit_id, checkout_date, checkout_time, next_check_in_date, expected_hours, status, completed_at, cancelled_at";
+  "id, unit_id, checkout_date, checkout_time, next_check_in_date, expected_hours, status, claimed_at, completed_at, cancelled_at";
 
 const UNIT_SELECT =
   "id, unit_name, address, building_id, access_instructions, important_notes, special_requirements, checklist_items, buildings(name, customers(name, mobile))";
@@ -49,6 +50,7 @@ type RawJob = {
   next_check_in_date: string | null;
   expected_hours: number | null;
   status: string;
+  claimed_at: string | null;
   completed_at: string | null;
   cancelled_at: string | null;
 };
@@ -71,7 +73,9 @@ function toPilotJob(job: RawJob, unitById: Map<string, RawUnit>): PilotJob {
     accessInstructions: unit?.access_instructions ?? null,
     importantNotes: unit?.important_notes ?? null,
     specialRequirements: unit?.special_requirements ?? null,
+    claimedAt: job.claimed_at,
     completedAt: job.completed_at,
+    cancelledAt: job.cancelled_at,
     ownerName: customer?.name ?? null,
     ownerMobile: customer?.mobile ?? null,
     checklistItems:
@@ -144,7 +148,31 @@ export async function getJobsForStaff(staffId: string): Promise<PilotJob[]> {
     .in("unit_id", unitIds)
     .is("cancelled_at", null)
     .is("completed_at", null)
+    .in("status", ["Open", "Upcoming", "Ready"])
     .order("checkout_date", { ascending: true });
+
+  return (jobs ?? []).map((job) => toPilotJob(job as RawJob, unitById));
+}
+
+export async function getMyJobsForStaff(staffId: string): Promise<PilotJob[]> {
+  if (usesFakeData()) {
+    return fakeGetMyJobsForStaff(staffId);
+  }
+
+  const unitById = await getUnitsForStaff(staffId);
+  const unitIds = [...unitById.keys()];
+  if (unitIds.length === 0) return [];
+
+  const supabase = getServiceClient();
+  const { data: jobs } = await supabase
+    .from("jobs")
+    .select(JOB_SELECT)
+    .in("unit_id", unitIds)
+    .eq("assigned_staff_id", staffId)
+    .is("cancelled_at", null)
+    .or("claimed_at.not.is.null,completed_at.not.is.null")
+    .order("checkout_date", { ascending: false })
+    .limit(50);
 
   return (jobs ?? []).map((job) => toPilotJob(job as RawJob, unitById));
 }

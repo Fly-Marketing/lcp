@@ -2,11 +2,22 @@
 
 import { getServiceClient } from "@/lib/pilot/supabase";
 import { usesFakeData } from "@/lib/pilot/mode";
-import { fakeAcceptJob, fakeCompleteJob, fakeReportIssue } from "@/lib/pilot/fake-store";
-import { issueCleanerLink } from "@/lib/pilot/links";
+import {
+  fakeAcceptJob,
+  fakeCompleteJob,
+  fakeDeleteReport,
+  fakeReportIssue,
+  fakeUpdateCompletedJob,
+  fakeUpdateReport,
+} from "@/lib/pilot/fake-store";
+import { getStaffForToken } from "@/lib/pilot/queries";
+import { hashTokenForLookup, issueCleanerLink } from "@/lib/pilot/links";
 import type { IssueCategory } from "@/lib/pilot/types";
 
-export async function acceptJob(jobId: string) {
+export async function acceptJob(token: string, jobId: string) {
+  const staff = await getStaffForToken(hashTokenForLookup(token), token);
+  if (!staff) return { success: false, message: "This access link is no longer valid" };
+
   if (usesFakeData()) {
     return fakeAcceptJob(jobId);
   }
@@ -14,7 +25,11 @@ export async function acceptJob(jobId: string) {
   const supabase = getServiceClient();
   const { error } = await supabase
     .from("jobs")
-    .update({ status: "Claimed", claimed_at: new Date().toISOString() })
+    .update({
+      status: "Claimed",
+      claimed_at: new Date().toISOString(),
+      assigned_staff_id: staff.id,
+    })
     .eq("id", jobId);
 
   if (error) return { success: false, message: error.message };
@@ -31,6 +46,29 @@ export async function completeJob(jobId: string) {
     .from("jobs")
     .update({ status: "Completed", completed_at: new Date().toISOString() })
     .eq("id", jobId);
+
+  if (error) return { success: false, message: error.message };
+  return { success: true };
+}
+
+export async function updateCompletedJob(
+  jobId: string,
+  state: string
+) {
+  if (!["Completed", "Needs attention", "Not clean"].includes(state)) {
+    return { success: false, message: "Choose a valid cleaning result" };
+  }
+
+  if (usesFakeData()) {
+    return fakeUpdateCompletedJob(jobId, state);
+  }
+
+  const supabase = getServiceClient();
+  const { error } = await supabase
+    .from("jobs")
+    .update({ status: state })
+    .eq("id", jobId)
+    .not("completed_at", "is", null);
 
   if (error) return { success: false, message: error.message };
   return { success: true };
@@ -57,6 +95,48 @@ export async function reportIssue(
     urgent,
     photo_urls: photoUrls.length > 0 ? photoUrls : null,
   });
+
+  if (error) return { success: false, message: error.message };
+  return { success: true };
+}
+
+export async function updateReport(
+  reportId: string,
+  description: string,
+  category: IssueCategory,
+  urgent: boolean,
+  photoUrls: string[]
+) {
+  if (!description.trim()) {
+    return { success: false, message: "Describe the issue before saving" };
+  }
+
+  if (usesFakeData()) {
+    return fakeUpdateReport(reportId, description, category, urgent, photoUrls);
+  }
+
+  const supabase = getServiceClient();
+  const { error } = await supabase
+    .from("reports")
+    .update({
+      description: description.trim(),
+      category,
+      urgent,
+      photo_urls: photoUrls.length > 0 ? photoUrls : null,
+    })
+    .eq("id", reportId);
+
+  if (error) return { success: false, message: error.message };
+  return { success: true };
+}
+
+export async function deleteReport(reportId: string) {
+  if (usesFakeData()) {
+    return fakeDeleteReport(reportId);
+  }
+
+  const supabase = getServiceClient();
+  const { error } = await supabase.from("reports").delete().eq("id", reportId);
 
   if (error) return { success: false, message: error.message };
   return { success: true };

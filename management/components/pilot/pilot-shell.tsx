@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Clock, User } from "lucide-react";
+import { Home, Briefcase, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function PilotShell({
@@ -19,7 +19,7 @@ export function PilotShell({
 
   const navItems = [
     { href: `/pilot/job/${token}`, label: "Today", icon: Home },
-    { href: `/pilot/history/${token}`, label: "History", icon: Clock },
+    { href: `/pilot/history/${token}`, label: "My Jobs", icon: Briefcase },
     { href: `/pilot/account/${token}`, label: "Account", icon: User },
   ];
 

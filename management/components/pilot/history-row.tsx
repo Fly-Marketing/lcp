@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight, CircleDot, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PilotJob } from "@/lib/pilot/types";
 
@@ -12,6 +12,15 @@ export function HistoryRow({
   job: PilotJob;
   isSelected?: boolean;
 }) {
+  const state = job.cancelledAt ? "Cancelled" : job.completedAt ? "Completed" : "To do";
+  const StateIcon = state === "Cancelled" ? XCircle : state === "Completed" ? CheckCircle2 : CircleDot;
+  const stateClass =
+    state === "Cancelled"
+      ? "text-red-700"
+      : state === "Completed"
+        ? "text-green-700"
+        : "text-primary";
+
   return (
     <Link
       href={`/pilot/history/${token}/view/${job.id}`}
@@ -30,13 +39,16 @@ export function HistoryRow({
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-1">
-        <span className="flex items-center gap-1 text-xs font-medium text-green-700">
-          <CheckCircle2 className="size-3.5" />
-          Completed
+        <span className={`flex items-center gap-1 text-xs font-medium ${stateClass}`}>
+          <StateIcon className="size-3.5" />
+          {state}
         </span>
-        {job.completedAt ? (
+        {job.completedAt || job.cancelledAt ? (
           <span className="text-[11px] text-muted-foreground">
-            {new Date(job.completedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+            {new Date(job.completedAt ?? job.cancelledAt ?? "").toLocaleDateString("en-CA", {
+              month: "short",
+              day: "numeric",
+            })}
           </span>
         ) : null}
       </div>

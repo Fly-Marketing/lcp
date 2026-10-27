@@ -10,9 +10,7 @@ export const FAKE_STAFF = { id: "fake-staff-1", name: "Eddy (fake)", mobile: "78
 
 export const FAKE_TOKEN = "fake-link-1";
 
-interface FakeJob extends PilotJob {
-  claimedAt: string | null;
-}
+type FakeJob = PilotJob;
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -37,6 +35,7 @@ const fakeJobs: FakeJob[] = [
     status: "Upcoming",
     claimedAt: null,
     completedAt: null,
+    cancelledAt: null,
     accessInstructions: "Lockbox code 4471. Key is on the hook inside the pantry door.",
     importantNotes: "Same-day turnover — guest checks in at 4pm, clean this first.",
     specialRequirements: "Pet-friendly unit, vacuum under the couch.",
@@ -62,6 +61,7 @@ const fakeJobs: FakeJob[] = [
     status: "Upcoming",
     claimedAt: null,
     completedAt: null,
+    cancelledAt: null,
     accessInstructions: "Smart lock, code 8842#.",
     importantNotes: null,
     specialRequirements: null,
@@ -81,6 +81,7 @@ const fakeJobs: FakeJob[] = [
     status: "Upcoming",
     claimedAt: null,
     completedAt: null,
+    cancelledAt: null,
     accessInstructions: "Front desk has a spare key, ask for Suite 1.",
     importantNotes: "Owner asked for extra towels this week.",
     specialRequirements: null,
@@ -100,6 +101,7 @@ const fakeJobs: FakeJob[] = [
     status: "Completed",
     claimedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    cancelledAt: null,
     accessInstructions: "Lockbox code 4471.",
     importantNotes: null,
     specialRequirements: null,
@@ -119,7 +121,28 @@ const fakeJobs: FakeJob[] = [
     status: "Completed",
     claimedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
     completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    cancelledAt: null,
     accessInstructions: "Smart lock, code 8842#.",
+    importantNotes: null,
+    specialRequirements: null,
+    ownerName: "Caitlyn (fake)",
+    ownerMobile: "7805550123",
+    checklistItems: DEFAULT_CHECKLIST_ITEMS,
+  },
+  {
+    id: "fake-job-6",
+    unitLabel: "Suite 6",
+    propertyName: "Macewan B&B (fake)",
+    address: "10608 106 St Edmonton, AB T5H 2X8",
+    checkoutDate: todayISO(),
+    checkoutTime: "11:00",
+    nextCheckInDate: addDaysISO(1),
+    expectedHours: 2,
+    status: "Upcoming",
+    claimedAt: null,
+    completedAt: null,
+    cancelledAt: null,
+    accessInstructions: null,
     importantNotes: null,
     specialRequirements: null,
     ownerName: "Caitlyn (fake)",
@@ -153,8 +176,13 @@ export function fakeGetStaffForToken(token: string) {
 export function fakeGetJobsForStaff(staffId: string): PilotJob[] {
   if (staffId !== FAKE_STAFF.id) return [];
   return fakeJobs
-    .filter((j) => !j.completedAt)
-    .map(({ claimedAt: _claimedAt, ...job }) => job);
+    .filter(
+      (job) =>
+        !job.completedAt &&
+        !job.cancelledAt &&
+        ["Open", "Upcoming", "Ready"].includes(job.status)
+    )
+    .map((job) => ({ ...job }));
 }
 
 export function fakeGetCompletedJobsForStaff(staffId: string): PilotJob[] {
@@ -162,14 +190,26 @@ export function fakeGetCompletedJobsForStaff(staffId: string): PilotJob[] {
   return fakeJobs
     .filter((j) => j.completedAt)
     .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""))
-    .map(({ claimedAt: _claimedAt, ...job }) => job);
+    .map((job) => ({ ...job }));
+}
+
+export function fakeGetMyJobsForStaff(staffId: string): PilotJob[] {
+  if (staffId !== FAKE_STAFF.id) return [];
+  return fakeJobs
+    .filter((job) => !job.cancelledAt && (job.claimedAt || job.completedAt))
+    .sort((a, b) => {
+      const rank = (job: FakeJob) => (job.completedAt ? 1 : 0);
+      const rankDifference = rank(a) - rank(b);
+      if (rankDifference !== 0) return rankDifference;
+      return (b.checkoutDate ?? "").localeCompare(a.checkoutDate ?? "");
+    })
+    .map((job) => ({ ...job }));
 }
 
 export function fakeGetJobById(jobId: string): PilotJob | null {
   const job = fakeJobs.find((j) => j.id === jobId);
   if (!job) return null;
-  const { claimedAt: _claimedAt, ...rest } = job;
-  return rest;
+  return { ...job };
 }
 
 export function fakeAcceptJob(jobId: string) {
@@ -185,6 +225,16 @@ export function fakeCompleteJob(jobId: string) {
   if (!job) return { success: false, message: "Fake job not found" };
   job.status = "Completed";
   job.completedAt = new Date().toISOString();
+  return { success: true };
+}
+
+export function fakeUpdateCompletedJob(
+  jobId: string,
+  state: string
+) {
+  const job = fakeJobs.find((j) => j.id === jobId);
+  if (!job) return { success: false, message: "Fake job not found" };
+  job.status = state;
   return { success: true };
 }
 
@@ -214,4 +264,35 @@ export function fakeReportIssue(
 
 export function fakeGetReportsForJob(jobId: string): PilotReport[] {
   return fakeReports[jobId] ?? [];
+}
+
+export function fakeUpdateReport(
+  reportId: string,
+  description: string,
+  category: string,
+  urgent: boolean,
+  photoUrls: string[]
+) {
+  for (const reports of Object.values(fakeReports)) {
+    const report = reports.find((item) => item.id === reportId);
+    if (!report) continue;
+    report.description = description;
+    report.category = category;
+    report.urgent = urgent;
+    report.photoUrls = photoUrls;
+    return { success: true };
+  }
+
+  return { success: false, message: "Fake report not found" };
+}
+
+export function fakeDeleteReport(reportId: string) {
+  for (const [jobId, reports] of Object.entries(fakeReports)) {
+    const index = reports.findIndex((report) => report.id === reportId);
+    if (index === -1) continue;
+    fakeReports[jobId] = reports.filter((_, reportIndex) => reportIndex !== index);
+    return { success: true };
+  }
+
+  return { success: false, message: "Fake report not found" };
 }

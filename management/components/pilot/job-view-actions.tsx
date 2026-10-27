@@ -20,7 +20,7 @@ export function JobViewActions({ token, job, staffId }: { token: string; job: Pi
   function handleAccept() {
     setError(null);
     startTransition(async () => {
-      const result = await acceptJob(job.id);
+      const result = await acceptJob(token, job.id);
       if (!result.success) {
         const message = result.message ?? "Failed to accept job";
         setError(message);
@@ -28,7 +28,7 @@ export function JobViewActions({ token, job, staffId }: { token: string; job: Pi
         return;
       }
       toast.success("Job accepted");
-      router.refresh();
+      router.push(`/pilot/history/${token}/view/${job.id}`);
     });
   }
 
@@ -47,9 +47,11 @@ export function JobViewActions({ token, job, staffId }: { token: string; job: Pi
         <CompletionFlow token={token} jobId={job.id} checklistItems={job.checklistItems} />
       ) : null}
 
-      <Button size="lg" variant="outline" onClick={() => setShowReport(true)}>
-        Report a problem
-      </Button>
+      {!job.cancelledAt ? (
+        <Button size="lg" variant="outline" onClick={() => setShowReport(true)}>
+          Report a problem
+        </Button>
+      ) : null}
 
       <ReportProblemDialog
         jobId={job.id}

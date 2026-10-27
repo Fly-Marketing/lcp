@@ -23,8 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { reportIssue, uploadReportPhoto } from "@/lib/pilot/actions";
-import { ISSUE_CATEGORIES, type IssueCategory } from "@/lib/pilot/types";
+import { reportIssue, updateReport, uploadReportPhoto } from "@/lib/pilot/actions";
+import { ISSUE_CATEGORIES, type IssueCategory, type PilotReport } from "@/lib/pilot/types";
 
 export function ReportProblemDialog({
   jobId,
@@ -33,6 +33,7 @@ export function ReportProblemDialog({
   open,
   onOpenChange,
   onSubmitted,
+  initialReport,
 }: {
   jobId: string;
   staffId: string;
@@ -40,20 +41,33 @@ export function ReportProblemDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmitted?: () => void;
+  initialReport?: PilotReport | null;
 }) {
   const [isPending, startTransition] = useTransition();
   const [isUploading, setIsUploading] = useState(false);
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<IssueCategory>("Other");
-  const [urgent, setUrgent] = useState(false);
-  const [photos, setPhotos] = useState<{ url: string; previewName: string }[]>([]);
+  const [description, setDescription] = useState(initialReport?.description ?? "");
+  const [category, setCategory] = useState<IssueCategory>(
+    (initialReport?.category as IssueCategory | undefined) ?? "Other"
+  );
+  const [urgent, setUrgent] = useState(initialReport?.urgent ?? false);
+  const [photos, setPhotos] = useState<{ url: string; previewName: string }[]>(
+    (initialReport?.photoUrls ?? []).map((url, index) => ({
+      url,
+      previewName: `Photo ${index + 1}`,
+    }))
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function resetForm() {
-    setDescription("");
-    setCategory("Other");
-    setUrgent(false);
-    setPhotos([]);
+    setDescription(initialReport?.description ?? "");
+    setCategory((initialReport?.category as IssueCategory | undefined) ?? "Other");
+    setUrgent(initialReport?.urgent ?? false);
+    setPhotos(
+      (initialReport?.photoUrls ?? []).map((url, index) => ({
+        url,
+        previewName: `Photo ${index + 1}`,
+      }))
+    );
   }
 
   async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
@@ -81,19 +95,15 @@ export function ReportProblemDialog({
   function handleSubmit() {
     if (!description.trim()) return;
     startTransition(async () => {
-      const result = await reportIssue(
-        jobId,
-        staffId,
-        description,
-        category,
-        urgent,
-        photos.map((p) => p.url)
-      );
+      const photoUrls = photos.map((photo) => photo.url);
+      const result = initialReport
+        ? await updateReport(initialReport.id, description, category, urgent, photoUrls)
+        : await reportIssue(jobId, staffId, description, category, urgent, photoUrls);
       if (!result.success) {
-        toast.error(result.message ?? "Failed to submit report");
+        toast.error(result.message ?? `Failed to ${initialReport ? "update" : "submit"} report`);
         return;
       }
-      toast.success("Report submitted");
+      toast.success(initialReport ? "Report updated" : "Report submitted");
       resetForm();
       onOpenChange(false);
       onSubmitted?.();
@@ -101,10 +111,16 @@ export function ReportProblemDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) resetForm();
+        onOpenChange(nextOpen);
+      }}
+    >
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Report a problem</DialogTitle>
+          <DialogTitle>{initialReport ? "Edit report" : "Report a problem"}</DialogTitle>
           <DialogDescription>{unitLabel}</DialogDescription>
         </DialogHeader>
 
@@ -126,7 +142,7 @@ export function ReportProblemDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label>What's wrong?</Label>
+            <Label>What&apos;s wrong?</Label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -194,7 +210,7 @@ export function ReportProblemDialog({
         <DialogFooter>
           <Button disabled={isPending || isUploading || !description.trim()} onClick={handleSubmit}>
             {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Submit report
+            {initialReport ? "Save report" : "Submit report"}
           </Button>
         </DialogFooter>
       </DialogContent>

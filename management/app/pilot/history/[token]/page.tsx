@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PilotShell } from "@/components/pilot/pilot-shell";
 import { HistoryList } from "@/components/pilot/history-list";
 import { MasterDetail } from "@/components/pilot/master-detail";
-import { getStaffForToken, getCompletedJobsForStaff } from "@/lib/pilot/queries";
+import { getStaffForToken, getMyJobsForStaff } from "@/lib/pilot/queries";
 import { hashTokenForLookup } from "@/lib/pilot/links";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export default async function PilotHistoryPage({
     notFound();
   }
 
-  const jobs = await getCompletedJobsForStaff(staff.id);
+  const jobs = await getMyJobsForStaff(staff.id);
 
   return (
     <PilotShell token={token} staffName={staff.name}>

@@ -17,7 +17,9 @@ export interface PilotJob {
   accessInstructions: string | null;
   importantNotes: string | null;
   specialRequirements: string | null;
+  claimedAt: string | null;
   completedAt: string | null;
+  cancelledAt: string | null;
   ownerName: string | null;
   ownerMobile: string | null;
   checklistItems: ChecklistItem[];
