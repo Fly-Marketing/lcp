@@ -25,57 +25,58 @@ async function loadGrants(account: {
     for (const b of rows ?? []) modes.set(b.id, b.management_mode === "self" ? "self" : "lcp");
   };
 
+  // Owner, cleaner, staff flags and manager lookups are independent, so they run in one round trip.
+  const [ownerRes, assignmentsRes, staffRes, managerRes] = await Promise.all([
+    account.customer_id
+      ? supabase.from("buildings").select("id, management_mode").eq("customer_id", account.customer_id)
+      : null,
+    account.staff_id
+      ? supabase
+          .from("building_cleaners")
+          .select("building_id, buildings(id, management_mode)")
+          .eq("staff_id", account.staff_id)
+          .is("revoked_at", null)
+      : null,
+    account.staff_id
+      ? supabase.from("staff").select("is_admin, active").eq("id", account.staff_id).maybeSingle()
+      : null,
+    supabase
+      .from("role_assignments")
+      .select("building_id, can_edit_price, is_primary, buildings(id, management_mode)")
+      .eq("account_id", account.id)
+      .eq("role", "manager")
+      .is("revoked_at", null),
+  ]);
+
   // Owner: derived from buildings.customer_id.
-  if (account.customer_id) {
-    const { data } = await supabase
-      .from("buildings")
-      .select("id, management_mode")
-      .eq("customer_id", account.customer_id);
-    rememberModes(data as BuildingRow[] | null);
-    for (const b of (data as BuildingRow[] | null) ?? []) {
-      grants.push({
-        role: "owner",
-        buildingId: b.id,
-        managementMode: modes.get(b.id) ?? "lcp",
-        canEditPrice: false,
-        isPrimary: false,
-      });
-    }
+  const ownerBuildings = (ownerRes?.data as BuildingRow[] | null) ?? [];
+  rememberModes(ownerBuildings);
+  for (const b of ownerBuildings) {
+    grants.push({
+      role: "owner",
+      buildingId: b.id,
+      managementMode: modes.get(b.id) ?? "lcp",
+      canEditPrice: false,
+      isPrimary: false,
+    });
   }
 
   // Cleaner: derived from building_cleaners (soft-removed rows excluded).
-  let isAdmin = false;
-  if (account.staff_id) {
-    const [{ data: assignments }, { data: staff }] = await Promise.all([
-      supabase
-        .from("building_cleaners")
-        .select("building_id, buildings(id, management_mode)")
-        .eq("staff_id", account.staff_id)
-        .is("revoked_at", null),
-      supabase.from("staff").select("is_admin, active").eq("id", account.staff_id).maybeSingle(),
-    ]);
-    isAdmin = Boolean(staff?.is_admin) && staff?.active !== false;
-    for (const a of assignments ?? []) {
-      const b = Array.isArray(a.buildings) ? a.buildings[0] : a.buildings;
-      const mode: ManagementMode = b?.management_mode === "self" ? "self" : "lcp";
-      grants.push({
-        role: "cleaner",
-        buildingId: a.building_id as string,
-        managementMode: mode,
-        canEditPrice: false,
-        isPrimary: false,
-      });
-    }
+  const isAdmin = Boolean(staffRes?.data?.is_admin) && staffRes?.data?.active !== false;
+  for (const a of assignmentsRes?.data ?? []) {
+    const b = Array.isArray(a.buildings) ? a.buildings[0] : a.buildings;
+    const mode: ManagementMode = b?.management_mode === "self" ? "self" : "lcp";
+    grants.push({
+      role: "cleaner",
+      buildingId: a.building_id as string,
+      managementMode: mode,
+      canEditPrice: false,
+      isPrimary: false,
+    });
   }
 
   // Manager: role_assignments.
-  const { data: managerRows } = await supabase
-    .from("role_assignments")
-    .select("building_id, can_edit_price, is_primary, buildings(id, management_mode)")
-    .eq("account_id", account.id)
-    .eq("role", "manager")
-    .is("revoked_at", null);
-  for (const r of managerRows ?? []) {
+  for (const r of managerRes.data ?? []) {
     const b = Array.isArray(r.buildings) ? r.buildings[0] : r.buildings;
     grants.push({
       role: "manager",
