@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Building2, ClipboardList, Home, LogOut, Users, type LucideIcon } from "lucide-react";
+import { Building2, ClipboardList, Home, LogOut, Settings, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/app/pilot/signin/actions";
 import type { NavItem, NavKey } from "@/lib/auth/nav";
@@ -14,6 +14,20 @@ const ICONS: Record<NavKey, LucideIcon> = {
   jobs: ClipboardList,
   team: Users,
 };
+
+// Settings pill in the top bar. The name is kept for screen readers only.
+function AccountPill({ displayName }: { displayName: string }) {
+  return (
+    <Link
+      href="/pilot/account"
+      aria-label={`Account settings for ${displayName}`}
+      className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    >
+      <Settings className="size-4" />
+      Settings
+    </Link>
+  );
+}
 
 export function PilotShell({
   items,
@@ -77,16 +91,12 @@ export function PilotShell({
             <Image src="/lcp-logo.svg" alt="LCP" width={24} height={24} />
             <span className="font-heading text-sm font-semibold">LCP</span>
           </div>
-          <Link href="/pilot/account" className="text-sm text-muted-foreground hover:text-foreground">
-            Hi, {displayName}
-          </Link>
+          <AccountPill displayName={displayName} />
         </header>
 
         {/* Desktop top bar: account lives here, not in the nav */}
         <header className="hidden items-center justify-end border-b border-border bg-background px-6 py-3 md:flex">
-          <Link href="/pilot/account" className="text-sm text-muted-foreground hover:text-foreground">
-            Hi, {displayName}
-          </Link>
+          <AccountPill displayName={displayName} />
         </header>
 
         <main className="mx-auto w-full max-w-md flex-1 p-4 pb-20 md:max-w-5xl md:p-6 md:pb-6">
