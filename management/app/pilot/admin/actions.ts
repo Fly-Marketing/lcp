@@ -14,13 +14,13 @@ type Result = { success: true } | { success: false; message: string };
 const DENIED: Result = { success: false, message: "Admins only" };
 
 async function requireAdmin() {
-  const session = await requireSession("/pilot/admin");
+  const session = await requireSession("/pilot/team?tab=admin");
   if (!session.isAdmin || usesFakeData()) return null;
   return session;
 }
 
 const done = (): Result => {
-  revalidatePath("/pilot/admin");
+  revalidatePath("/pilot/team");
   return { success: true };
 };
 

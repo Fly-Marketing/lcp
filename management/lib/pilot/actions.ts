@@ -20,21 +20,21 @@ function refresh(...paths: string[]) {
 export async function acceptJob(jobId: string): Promise<Result> {
   const session = await requireSession();
   const r = await svc.acceptJob(session, jobId);
-  if (r.success) refresh("/pilot/today", "/pilot/my-jobs");
+  if (r.success) refresh("/pilot/today", "/pilot/jobs");
   return r;
 }
 
 export async function completeJob(jobId: string): Promise<Result> {
   const session = await requireSession();
   const r = await svc.completeJob(session, jobId);
-  if (r.success) refresh("/pilot/today", "/pilot/my-jobs", "/pilot/properties", "/pilot/jobs");
+  if (r.success) refresh("/pilot/today", "/pilot/jobs", "/pilot/properties", "/pilot/jobs");
   return r;
 }
 
 export async function updateCompletedJob(jobId: string, state: string): Promise<Result> {
   const session = await requireSession();
   const r = await svc.setCompletedJobResult(session, jobId, state);
-  if (r.success) refresh("/pilot/my-jobs", "/pilot/properties", "/pilot/jobs");
+  if (r.success) refresh("/pilot/jobs", "/pilot/properties", "/pilot/jobs");
   return r;
 }
 
@@ -47,7 +47,7 @@ export async function reportIssue(
 ): Promise<Result> {
   const session = await requireSession();
   const r = await svc.createReport(session, jobId, { description, category, urgent, photoPaths });
-  if (r.success) refresh("/pilot/my-jobs", "/pilot/properties", "/pilot/jobs");
+  if (r.success) refresh("/pilot/jobs", "/pilot/properties", "/pilot/jobs");
   return r;
 }
 
@@ -60,14 +60,14 @@ export async function updateReport(
 ): Promise<Result> {
   const session = await requireSession();
   const r = await svc.editReport(session, reportId, { description, category, urgent, photoPaths });
-  if (r.success) refresh("/pilot/my-jobs", "/pilot/properties", "/pilot/jobs");
+  if (r.success) refresh("/pilot/jobs", "/pilot/properties", "/pilot/jobs");
   return r;
 }
 
 export async function deleteReport(reportId: string): Promise<Result> {
   const session = await requireSession();
   const r = await svc.removeReport(session, reportId);
-  if (r.success) refresh("/pilot/my-jobs", "/pilot/properties", "/pilot/jobs");
+  if (r.success) refresh("/pilot/jobs", "/pilot/properties", "/pilot/jobs");
   return r;
 }
 

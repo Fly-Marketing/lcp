@@ -178,22 +178,26 @@ describe("permissions", () => {
 
 describe("navigation", () => {
   it("cleaner only", () => {
-    expect(navFor(session([grant("cleaner", A)])).map((i) => i.label)).toEqual(["Today", "My Jobs", "Account"]);
+    expect(navFor(session([grant("cleaner", A)])).map((i) => i.label)).toEqual(["Today", "Jobs"]);
   });
   it("owner / manager", () => {
-    expect(navFor(session([grant("owner", A)])).map((i) => i.label)).toEqual(["Properties", "Jobs", "Team", "Account"]);
+    expect(navFor(session([grant("owner", A)])).map((i) => i.label)).toEqual(["Properties", "Jobs", "Team"]);
   });
   it("manager who is also a cleaner gets the union", () => {
     expect(navFor(session([grant("manager", A), grant("cleaner", A)])).map((i) => i.label)).toEqual([
+      "Today",
       "Properties",
       "Jobs",
-      "My Jobs",
       "Team",
-      "Account",
     ]);
   });
-  it("admin adds Admin", () => {
-    expect(navFor(session([grant("cleaner", A)], { isAdmin: true })).map((i) => i.label).at(-1)).toBe("Admin");
+  it("admin sees the staff nav, with admin tools under Team", () => {
+    expect(navFor(session([grant("cleaner", A)], { isAdmin: true })).map((i) => i.label)).toEqual([
+      "Today",
+      "Properties",
+      "Jobs",
+      "Team",
+    ]);
   });
   it("home routes", () => {
     expect(homeFor(session([grant("cleaner", A)]))).toBe("/pilot/today");

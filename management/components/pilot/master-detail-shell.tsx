@@ -32,6 +32,7 @@ export function OpenJobsShell({
   );
 }
 
+// Cleaners: their own accepted jobs and completed history.
 export function HistoryShell({
   jobs,
   listProps,
@@ -50,41 +51,58 @@ export function HistoryShell({
   );
 }
 
-// Managers and admins: "All jobs" or "Needs attention", chosen with ?filter=attention.
+export type StaffFilter = "all" | "mine" | "attention";
+
+const FILTERS: { value: StaffFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "mine", label: "My jobs" },
+  { value: "attention", label: "Needs attention" },
+];
+
+// Owners, managers and admins: All · My jobs · Needs attention, chosen with ?filter=.
 export function StaffJobsShell({
   allJobs,
+  myJobs,
   attentionJobs,
-  canFilter,
+  canFilterAttention,
   children,
 }: {
   allJobs: PilotJob[];
+  myJobs: PilotJob[];
   attentionJobs: PilotJob[];
-  canFilter: boolean;
+  canFilterAttention: boolean;
   children: React.ReactNode;
 }) {
-  const filter = useSearchParams().get("filter");
+  const requested = useSearchParams().get("filter");
   const selectedJobId = useSelectedLayoutSegment() ?? undefined;
-  const attention = canFilter && filter === "attention";
-  const jobs = attention ? attentionJobs : allJobs;
+  const filter: StaffFilter =
+    requested === "mine" || (requested === "attention" && canFilterAttention) ? requested : "all";
+  const visibleFilters = FILTERS.filter((f) => f.value !== "attention" || canFilterAttention);
+  const jobs = filter === "mine" ? myJobs : filter === "attention" ? attentionJobs : allJobs;
+  const todoLabel = filter === "attention" ? "Needs attention" : "Upcoming";
+  const emptyTodoHint =
+    filter === "attention"
+      ? "Nothing needs attention right now."
+      : filter === "mine"
+        ? "Jobs you accept or are assigned to show up here."
+        : "Add a cleaning job from Properties.";
 
   return (
     <>
-      {canFilter ? (
-        <div className="mb-4 flex gap-2 text-sm">
+      <div className="mb-4 flex gap-2 text-sm">
+        {visibleFilters.map((f) => (
           <Link
-            href="/pilot/jobs"
-            className={cn("rounded-full border px-3 py-1", !attention ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}
+            key={f.value}
+            href={f.value === "all" ? "/pilot/jobs" : `/pilot/jobs?filter=${f.value}`}
+            className={cn(
+              "rounded-full border px-3 py-1",
+              filter === f.value ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+            )}
           >
-            All jobs
+            {f.label}
           </Link>
-          <Link
-            href="/pilot/jobs?filter=attention"
-            className={cn("rounded-full border px-3 py-1", attention ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}
-          >
-            Needs attention
-          </Link>
-        </div>
-      ) : null}
+        ))}
+      </div>
       <MasterDetail
         list={
           <HistoryList
@@ -94,8 +112,8 @@ export function StaffJobsShell({
             variant="staff"
             title="Jobs"
             subtitle="Upcoming cleans and history"
-            todoLabel={attention ? "Needs attention" : "Upcoming"}
-            emptyTodoHint={attention ? "Nothing needs attention right now." : "Add a cleaning job from Properties."}
+            todoLabel={todoLabel}
+            emptyTodoHint={emptyTodoHint}
           />
         }
         detail={selectedJobId ? children : undefined}

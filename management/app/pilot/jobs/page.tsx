@@ -5,9 +5,10 @@ import { hasRole } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
-// The job list and the All / Needs attention tabs come from the layout.
+// The job list and filters come from the layout. This page only enforces sign-in and role.
 export default async function JobsPage() {
   const session = await requireSession("/pilot/jobs");
-  if (!session.isAdmin && !hasRole(session, "owner") && !hasRole(session, "manager")) redirect("/pilot/start");
+  const staff = session.isAdmin || hasRole(session, "owner") || hasRole(session, "manager");
+  if (!staff && !hasRole(session, "cleaner")) redirect("/pilot/start");
   return null;
 }

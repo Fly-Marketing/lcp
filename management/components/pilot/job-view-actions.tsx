@@ -28,7 +28,7 @@ export function JobViewActions({ job }: { job: PilotJob }) {
         return;
       }
       toast.success("Job accepted");
-      router.push(`/pilot/my-jobs/${job.id}`);
+      router.push(`/pilot/jobs/${job.id}`);
     });
   }
 

@@ -37,7 +37,7 @@ export function CompletionFlow({
         return;
       }
       toast.success("Job marked complete");
-      router.push(`/pilot/my-jobs/${jobId}`);
+      router.push(`/pilot/jobs/${jobId}`);
     });
   }
 
