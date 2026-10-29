@@ -49,6 +49,7 @@ export function HistoryList({
   subtitle = "Your to-do and completed cleans",
   todoLabel = "To do",
   emptyTodoHint = "Accept one from Today to move it here.",
+  header,
 }: {
   hrefBase: string;
   jobs: PilotJob[];
@@ -58,6 +59,7 @@ export function HistoryList({
   subtitle?: string;
   todoLabel?: string;
   emptyTodoHint?: string;
+  header?: React.ReactNode;
 }) {
   const currentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const [finishedMonth, setFinishedMonth] = useState(currentMonth);
@@ -79,6 +81,8 @@ export function HistoryList({
         <h1 className="font-heading text-2xl font-semibold">{title}</h1>
         <p className="text-sm text-muted-foreground">{subtitle}</p>
       </div>
+
+      {header}
 
       <button
         type="button"

@@ -154,7 +154,7 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
           </div>
         </div>
       ) : (
-        <div className="mx-auto w-full max-w-md md:max-w-2xl">{list}</div>
+        <div className="w-full">{list}</div>
       )}
 
       {addUnits.length > 0 ? (

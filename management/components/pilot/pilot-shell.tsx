@@ -12,7 +12,7 @@ const ICONS: Record<NavKey, LucideIcon> = {
   today: Home,
   properties: Building2,
   jobs: ClipboardList,
-  team: Users,
+  management: Users,
 };
 
 // Settings pill in the top bar. The name is kept for screen readers only.
@@ -24,7 +24,7 @@ function AccountPill({ displayName }: { displayName: string }) {
       className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
       <Settings className="size-4" />
-      Settings
+      My settings
     </Link>
   );
 }

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { User } from "lucide-react";
 
 import { PageFrame } from "@/components/pilot/page-frame";
@@ -21,7 +22,11 @@ function roleLabel(roles: string[]): string {
   return roles.length ? roles.map((r) => r[0].toUpperCase() + r.slice(1)).join(" · ") : "Member";
 }
 
-export default async function AccountPage() {
+// My account stands on its own, opened from the header. Team and admin tools now live under Management.
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams;
+  if (tab === "team" || tab === "accounts" || tab === "properties") redirect(`/pilot/management?tab=${tab}`);
+
   const session = await requireSession("/pilot/account");
 
   let phone = "";

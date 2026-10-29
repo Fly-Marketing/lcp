@@ -119,7 +119,7 @@ export async function saveUnitDetails(
 ): Promise<Result> {
   const session = await requireSession();
   const r = await svc.updateUnitDetails(session, unitId, input);
-  if (r.success) refresh("/pilot/properties", "/pilot/jobs", "/pilot/today");
+  if (r.success) refresh("/pilot/properties", "/pilot/jobs", "/pilot/today", "/pilot/management");
   return r;
 }
 
@@ -136,14 +136,14 @@ export async function addCleaner(
 ): Promise<Result> {
   const session = await requireSession();
   const r = await svc.addCleanerToBuilding(session, buildingId, input);
-  if (r.success) refresh("/pilot/team");
+  if (r.success) refresh("/pilot/management");
   return r;
 }
 
 export async function removeCleaner(buildingId: string, staffId: string): Promise<Result> {
   const session = await requireSession();
   const r = await svc.removeCleanerFromBuilding(session, buildingId, staffId);
-  if (r.success) refresh("/pilot/team");
+  if (r.success) refresh("/pilot/management");
   return r;
 }
 
@@ -153,13 +153,13 @@ export async function assignManager(
 ): Promise<Result> {
   const session = await requireSession();
   const r = await svc.assignBuildingManager(session, buildingId, input);
-  if (r.success) refresh("/pilot/team");
+  if (r.success) refresh("/pilot/management");
   return r;
 }
 
 export async function removeManager(buildingId: string, accountId: string): Promise<Result> {
   const session = await requireSession();
   const r = await svc.removeBuildingManager(session, buildingId, accountId);
-  if (r.success) refresh("/pilot/team");
+  if (r.success) refresh("/pilot/management");
   return r;
 }

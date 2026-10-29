@@ -181,22 +181,22 @@ describe("navigation", () => {
     expect(navFor(session([grant("cleaner", A)])).map((i) => i.label)).toEqual(["Today", "Jobs"]);
   });
   it("owner / manager", () => {
-    expect(navFor(session([grant("owner", A)])).map((i) => i.label)).toEqual(["Properties", "Jobs", "Team"]);
+    expect(navFor(session([grant("owner", A)])).map((i) => i.label)).toEqual(["Properties", "Jobs", "Management"]);
   });
   it("manager who is also a cleaner gets the union", () => {
     expect(navFor(session([grant("manager", A), grant("cleaner", A)])).map((i) => i.label)).toEqual([
       "Today",
       "Properties",
       "Jobs",
-      "Team",
+      "Management",
     ]);
   });
-  it("admin sees the staff nav, with admin tools under Team", () => {
+  it("admin sees the staff nav, with admin tools under Management", () => {
     expect(navFor(session([grant("cleaner", A)], { isAdmin: true })).map((i) => i.label)).toEqual([
       "Today",
       "Properties",
       "Jobs",
-      "Team",
+      "Management",
     ]);
   });
   it("home routes", () => {

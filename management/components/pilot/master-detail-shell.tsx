@@ -87,37 +87,39 @@ export function StaffJobsShell({
         ? "Jobs you accept or are assigned to show up here."
         : "Add a cleaning job from Properties.";
 
+  const filterChips = (
+    <div className="flex flex-wrap gap-2 text-sm">
+      {visibleFilters.map((f) => (
+        <Link
+          key={f.value}
+          href={f.value === "all" ? "/pilot/jobs" : `/pilot/jobs?filter=${f.value}`}
+          className={cn(
+            "rounded-full border px-3 py-1",
+            filter === f.value ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+          )}
+        >
+          {f.label}
+        </Link>
+      ))}
+    </div>
+  );
+
   return (
-    <>
-      <div className="mb-4 flex gap-2 text-sm">
-        {visibleFilters.map((f) => (
-          <Link
-            key={f.value}
-            href={f.value === "all" ? "/pilot/jobs" : `/pilot/jobs?filter=${f.value}`}
-            className={cn(
-              "rounded-full border px-3 py-1",
-              filter === f.value ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
-            )}
-          >
-            {f.label}
-          </Link>
-        ))}
-      </div>
-      <MasterDetail
-        list={
-          <HistoryList
-            hrefBase="/pilot/jobs"
-            jobs={jobs}
-            selectedJobId={selectedJobId}
-            variant="staff"
-            title="Jobs"
-            subtitle="Upcoming cleans and history"
-            todoLabel={todoLabel}
-            emptyTodoHint={emptyTodoHint}
-          />
-        }
-        detail={selectedJobId ? children : undefined}
-      />
-    </>
+    <MasterDetail
+      list={
+        <HistoryList
+          hrefBase="/pilot/jobs"
+          jobs={jobs}
+          selectedJobId={selectedJobId}
+          variant="staff"
+          title="Jobs"
+          subtitle="Upcoming cleans and history"
+          todoLabel={todoLabel}
+          emptyTodoHint={emptyTodoHint}
+          header={filterChips}
+        />
+      }
+      detail={selectedJobId ? children : undefined}
+    />
   );
 }

@@ -6,8 +6,8 @@ export function MasterDetail({
   detail?: React.ReactNode;
 }) {
   if (!detail) {
-    // No job selected: full-width list on every breakpoint.
-    return <div className="mx-auto w-full max-w-md md:max-w-2xl">{list}</div>;
+    // No item selected: the list fills the content width on every page.
+    return <div className="w-full">{list}</div>;
   }
 
   return (

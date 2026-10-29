@@ -1,7 +1,7 @@
 import type { Session } from "@/lib/auth/types";
 import { hasRole } from "@/lib/auth/permissions";
 
-export type NavKey = "today" | "properties" | "jobs" | "team";
+export type NavKey = "today" | "properties" | "jobs" | "management";
 
 export interface NavItem {
   key: NavKey;
@@ -13,11 +13,11 @@ const ITEMS: Record<NavKey, NavItem> = {
   today: { key: "today", label: "Today", href: "/pilot/today" },
   properties: { key: "properties", label: "Properties", href: "/pilot/properties" },
   jobs: { key: "jobs", label: "Jobs", href: "/pilot/jobs" },
-  team: { key: "team", label: "Team", href: "/pilot/team" },
+  management: { key: "management", label: "Management", href: "/pilot/management" },
 };
 
-// Account (phone, devices, sign-out) lives in the header. Admin tools live under Team.
-// Cleaner-only: Today · Jobs (Jobs shows their accepted jobs). Owner/manager/admin: Properties · Jobs · Team.
+// My account opens from the header pill. Management (team, accounts, properties) shows to staff only.
+// Cleaner-only: Today · Jobs (Jobs shows their accepted jobs). Owner/manager/admin: Properties · Jobs · Management.
 // Both: union, with Today first.
 export function navFor(session: Session): NavItem[] {
   const cleaner = hasRole(session, "cleaner");
@@ -25,7 +25,7 @@ export function navFor(session: Session): NavItem[] {
   const keys: NavKey[] = [];
 
   if (cleaner) keys.push("today");
-  if (staff) keys.push("properties", "jobs", "team");
+  if (staff) keys.push("properties", "jobs", "management");
   else if (cleaner) keys.push("jobs");
   return keys.map((k) => ITEMS[k]);
 }
