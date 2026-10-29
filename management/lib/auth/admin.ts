@@ -13,6 +13,7 @@ export interface AdminAccount {
   staffName: string | null;
   customerName: string | null;
   isAdmin: boolean;
+  isTest: boolean;
   active: boolean;
   devices: number;
   managerOf: { buildingId: string; buildingName: string; canEditPrice: boolean; isPrimary: boolean }[];
@@ -23,7 +24,7 @@ export interface AdminData {
   accounts: AdminAccount[];
   staff: { id: string; name: string }[];
   customers: { id: string; name: string }[];
-  buildings: { id: string; name: string; address: string | null; mode: "lcp" | "self"; customerId: string | null }[];
+  buildings: { id: string; name: string; address: string | null; mode: "lcp" | "self"; customerId: string | null; isTest: boolean }[];
   units: {
     id: string;
     name: string;
@@ -47,11 +48,11 @@ export async function loadAdminData(): Promise<AdminData> {
   const [accounts, staff, customers, buildings, units, devices, managers, cleaners] = await Promise.all([
     db
       .from("accounts")
-      .select("id, phone_e164, display_name, active, staff_id, customer_id, staff:staff_id(name, is_admin), customers:customer_id(name)")
+      .select("id, phone_e164, display_name, active, is_test, staff_id, customer_id, staff:staff_id(name, is_admin), customers:customer_id(name)")
       .order("created_at"),
     db.from("staff").select("id, name").order("name"),
     db.from("customers").select("id, name").order("name"),
-    db.from("buildings").select("id, name, address, management_mode, customer_id").order("name"),
+    db.from("buildings").select("id, name, address, management_mode, customer_id, is_test").order("name"),
     db
       .from("units")
       .select("id, unit_name, address, standard_rate, expected_hours, checkout_time, access_instructions, important_notes, special_requirements, checklist_items, building_id, buildings(name)")
@@ -87,6 +88,7 @@ export async function loadAdminData(): Promise<AdminData> {
       staffName: one<any>(a.staff)?.name ?? null,
       customerName: one<any>(a.customers)?.name ?? null,
       isAdmin: Boolean(one<any>(a.staff)?.is_admin),
+      isTest: a.is_test === true,
       active: a.active,
       devices: deviceCount.get(a.id) ?? 0,
       managerOf: (managers.data ?? [])
@@ -115,6 +117,7 @@ export async function loadAdminData(): Promise<AdminData> {
       address: b.address ?? null,
       mode: b.management_mode === "self" ? "self" : "lcp",
       customerId: b.customer_id,
+      isTest: b.is_test === true,
     })),
     units: (units.data ?? []).map((u: any) => ({
       id: u.id,

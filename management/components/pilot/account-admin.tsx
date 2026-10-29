@@ -96,7 +96,10 @@ export function AccountAdmin({ data }: { data: AdminData }) {
             )}
           >
             <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-semibold">{a.name || formatPhone(a.phone)}</p>
+              <p className="truncate text-sm font-semibold">
+                {a.name || formatPhone(a.phone)}
+                {a.isTest ? <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">Test</span> : null}
+              </p>
               <p className="truncate text-xs text-muted-foreground">
                 {rolesOf(a).join(" · ") || "No role yet"} · {formatPhone(a.phone)}
               </p>
@@ -260,6 +263,7 @@ function AccountForm({
   const [customerId, setCustomerId] = useState("");
   const [canEditPrice, setCanEditPrice] = useState(false);
   const [isPrimary, setIsPrimary] = useState(false);
+  const [isTest, setIsTest] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit =
@@ -289,10 +293,10 @@ function AccountForm({
 
       const draft: AccountDraft =
         role === "cleaner"
-          ? { role, name, phone, buildingId: buildingId || null, cleanerRole }
+          ? { role, name, phone, buildingId: buildingId || null, cleanerRole, isTest }
           : role === "owner"
-            ? { role, name, phone, customerId: customerId || null }
-            : { role, name, phone, buildingId, canEditPrice, isPrimary };
+            ? { role, name, phone, customerId: customerId || null, isTest }
+            : { role, name, phone, buildingId, canEditPrice, isPrimary, isTest };
       const r = await createAccount(draft);
       if (!r.success) return fail(r.message);
       toast.success("Account created");
@@ -302,6 +306,18 @@ function AccountForm({
 
   const fields = (
     <>
+      {!account ? (
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-1" checked={isTest} onChange={(e) => setIsTest(e.target.checked)} />
+          <span>
+            Test person
+            <span className="block text-xs text-muted-foreground">
+              Signs in on the preview with a code from this screen. Nothing is texted.
+            </span>
+          </span>
+        </label>
+      ) : null}
+
       {!account ? (
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="account-role">Role</Label>

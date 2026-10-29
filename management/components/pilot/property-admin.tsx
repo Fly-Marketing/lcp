@@ -70,7 +70,10 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
             )}
           >
             <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-semibold">{b.name}</p>
+              <p className="truncate text-sm font-semibold">
+                {b.name}
+                {b.isTest ? <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">Test</span> : null}
+              </p>
               <p className="truncate text-xs text-muted-foreground">
                 {modeLabel(b.mode)} · {ownerName(b.customerId)}
               </p>
@@ -216,6 +219,7 @@ function PropertyForm({
   const [address, setAddress] = useState(building?.address ?? "");
   const [mode, setMode] = useState<"lcp" | "self">(building?.mode ?? "lcp");
   const [customerId, setCustomerId] = useState(building?.customerId ?? "");
+  const [isTest, setIsTest] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function submit() {
@@ -233,7 +237,7 @@ function PropertyForm({
         onDone();
         return;
       }
-      const result = await createProperty(input);
+      const result = await createProperty({ ...input, isTest });
       if (!result.success) {
         setError(result.message);
         toast.error(result.message);
@@ -273,6 +277,15 @@ function PropertyForm({
         </div>
       </div>
       <p className="text-xs text-muted-foreground">Owners are created in Accounts.</p>
+      {!building ? (
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-1" checked={isTest} onChange={(e) => setIsTest(e.target.checked)} />
+          <span>
+            Test property
+            <span className="block text-xs text-muted-foreground">Marked as test data, so it&apos;s easy to find and remove.</span>
+          </span>
+        </label>
+      ) : null}
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </>
   );

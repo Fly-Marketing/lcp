@@ -28,9 +28,9 @@ const done = (): Result => {
 };
 
 type AccountInput =
-  | { role: "cleaner"; name: string; phone: string; buildingId?: string | null; cleanerRole?: "primary" | "backup" }
-  | { role: "owner"; name: string; phone: string; customerId?: string | null }
-  | { role: "manager"; name: string; phone: string; buildingId: string; canEditPrice: boolean; isPrimary: boolean };
+  | { role: "cleaner"; name: string; phone: string; buildingId?: string | null; cleanerRole?: "primary" | "backup"; isTest?: boolean }
+  | { role: "owner"; name: string; phone: string; customerId?: string | null; isTest?: boolean }
+  | { role: "manager"; name: string; phone: string; buildingId: string; canEditPrice: boolean; isPrimary: boolean; isTest?: boolean };
 
 // Creates one account for a cleaner, owner or manager, with the records that role needs.
 // If a later step fails, the records created so far are removed again.
@@ -79,7 +79,7 @@ export async function createAccount(input: AccountInput): Promise<Created> {
 
   const { data: account, error } = await supabase
     .from("accounts")
-    .insert({ phone_e164: phone, display_name: name, staff_id: staffId, customer_id: customerId })
+    .insert({ phone_e164: phone, display_name: name, staff_id: staffId, customer_id: customerId, is_test: input.isTest === true })
     .select("id")
     .single();
   if (error || !account) return fail("Could not create account");
@@ -167,6 +167,7 @@ export async function createProperty(input: {
   address: string;
   mode: "lcp" | "self";
   customerId: string | null;
+  isTest?: boolean;
 }): Promise<Created> {
   const admin = await requireAdmin();
   if (!admin) return DENIED;
@@ -181,6 +182,7 @@ export async function createProperty(input: {
       address: cleanText(input.address, 200) || null,
       management_mode: input.mode,
       customer_id: input.customerId || null,
+      is_test: input.isTest === true,
     })
     .select("id")
     .single();

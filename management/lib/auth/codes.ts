@@ -7,6 +7,7 @@ import { codeState } from "@/lib/auth/policy";
 import { findAccountByPhone } from "@/lib/auth/accounts";
 import { isLimited, limiterKey, recordEvent } from "@/lib/auth/rate-limit";
 import { sendOtp } from "@/lib/auth/sender";
+import { isTestSignIn } from "@/lib/auth/test-signin";
 import { usesFakeData } from "@/lib/pilot/mode";
 
 const MIN = 60 * 1000;
@@ -31,6 +32,8 @@ export async function requestLoginCode(phoneE164: string, ipValue: string): Prom
   const ipKey = limiterKey("ip", ipValue);
 
   if (usesFakeData()) return { ok: true };
+  // Test accounts (preview only) sign in with an admin-issued code, so no text is sent.
+  if (await isTestSignIn(phoneE164)) return { ok: true };
 
   if (
     (await isLimited("code_sent", phoneKey, 15 * MIN, AUTH.limits.codesPerPhone15Min)) ||
