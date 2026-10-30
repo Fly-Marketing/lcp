@@ -38,6 +38,7 @@ export default async function PropertiesPage() {
       status: c.status,
       lastCleanDate: c.lastCleanDate,
       nextCleanDate: c.nextJob?.checkoutDate ?? null,
+      nextJobId: c.nextJob?.id ?? null,
       nextCleanStatus: c.nextJob ? ownerStatus(c.nextJob) : null,
       openReports: c.openReports,
     })),

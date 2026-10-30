@@ -12,7 +12,7 @@ export interface NavItem {
 const ITEMS: Record<NavKey, NavItem> = {
   today: { key: "today", label: "Today", href: "/pilot/today" },
   properties: { key: "properties", label: "Properties", href: "/pilot/properties" },
-  jobs: { key: "jobs", label: "Jobs", href: "/pilot/jobs" },
+  jobs: { key: "jobs", label: "Schedule", href: "/pilot/jobs" },
   management: { key: "management", label: "Management", href: "/pilot/management" },
 };
 

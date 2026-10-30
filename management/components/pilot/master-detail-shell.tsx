@@ -65,19 +65,23 @@ export function StaffJobsShell({
   myJobs,
   attentionJobs,
   canFilterAttention,
+  canFilterMine,
   children,
 }: {
   allJobs: PilotJob[];
   myJobs: PilotJob[];
   attentionJobs: PilotJob[];
   canFilterAttention: boolean;
+  canFilterMine: boolean;
   children: React.ReactNode;
 }) {
   const requested = useSearchParams().get("filter");
   const selectedJobId = useSelectedLayoutSegment() ?? undefined;
   const filter: StaffFilter =
-    requested === "mine" || (requested === "attention" && canFilterAttention) ? requested : "all";
-  const visibleFilters = FILTERS.filter((f) => f.value !== "attention" || canFilterAttention);
+    (requested === "mine" && canFilterMine) || (requested === "attention" && canFilterAttention) ? requested : "all";
+  const visibleFilters = FILTERS.filter(
+    (f) => (f.value !== "attention" || canFilterAttention) && (f.value !== "mine" || canFilterMine)
+  );
   const jobs = filter === "mine" ? myJobs : filter === "attention" ? attentionJobs : allJobs;
   const todoLabel = filter === "attention" ? "Needs attention" : "Upcoming";
   const emptyTodoHint =
@@ -112,7 +116,7 @@ export function StaffJobsShell({
           jobs={jobs}
           selectedJobId={selectedJobId}
           variant="staff"
-          title="Jobs"
+          title="Schedule"
           subtitle="Upcoming cleans and history"
           todoLabel={todoLabel}
           emptyTodoHint={emptyTodoHint}

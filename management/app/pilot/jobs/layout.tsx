@@ -25,7 +25,7 @@ export default async function JobsLayout({ children }: { children: React.ReactNo
     const jobs = await listMyJobs(session);
     return (
       <PageFrame session={session}>
-        <HistoryShell jobs={jobs} listProps={{ hrefBase: "/pilot/jobs" }}>
+        <HistoryShell jobs={jobs} listProps={{ hrefBase: "/pilot/jobs", title: "Schedule" }}>
           {children}
         </HistoryShell>
       </PageFrame>
@@ -33,6 +33,8 @@ export default async function JobsLayout({ children }: { children: React.ReactNo
   }
 
   const canFilterAttention = session.isAdmin || hasRole(session, "manager");
+  // Only people who can be assigned jobs (a cleaner link) get a My jobs filter.
+  const canFilterMine = session.staffId !== null;
   const [upcoming, history, attention, accepted] = await Promise.all([
     listManagedJobs(session, { scope: "upcoming" }),
     listManagedJobs(session, { scope: "history" }),
@@ -49,6 +51,7 @@ export default async function JobsLayout({ children }: { children: React.ReactNo
         myJobs={uniqueById([...assignedToMe, ...accepted])}
         attentionJobs={attention}
         canFilterAttention={canFilterAttention}
+        canFilterMine={canFilterMine}
       >
         {children}
       </StaffJobsShell>

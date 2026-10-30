@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CalendarClock, CheckCircle2, ChevronRight, Flag, Plus, Sparkles } from "lucide-react";
 
 import { AddJobSheet, type AddJobUnit } from "@/components/pilot/add-job-form";
@@ -14,6 +15,7 @@ export interface BoardCard {
   status: UnitStatus;
   lastCleanDate: string | null;
   nextCleanDate: string | null;
+  nextJobId: string | null;
   nextCleanStatus: string | null;
   openReports: number;
 }
@@ -35,6 +37,38 @@ const STATUS_STYLE: Record<UnitStatus, { chip: string; icon: typeof CheckCircle2
 function fmt(date: string | null) {
   if (!date) return null;
   return new Date(`${date.slice(0, 10)}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// The next clean. When there is one, the whole card opens that job.
+function NextCleanCard({ card }: { card: BoardCard }) {
+  const body = (
+    <>
+      <CalendarClock className="size-5 shrink-0 text-primary" />
+      <div className="flex-1">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Next clean</p>
+        {card.nextCleanDate ? (
+          <p className="text-sm font-semibold">
+            {fmt(card.nextCleanDate)}
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              {card.nextCleanStatus === "Accepted" ? "Accepted" : "Scheduled"}
+            </span>
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {card.lastCleanDate ? `No clean scheduled. Last clean ${fmt(card.lastCleanDate)}` : "No cleans yet"}
+          </p>
+        )}
+      </div>
+      {card.nextJobId ? <ChevronRight className="size-4 shrink-0 text-muted-foreground" /> : null}
+    </>
+  );
+  const className = "flex items-center gap-3 rounded-xl border border-border bg-card p-4";
+  if (!card.nextJobId) return <div className={className}>{body}</div>;
+  return (
+    <Link href={`/pilot/jobs/${card.nextJobId}`} className={`${className} transition-colors hover:bg-muted/40`}>
+      {body}
+    </Link>
+  );
 }
 
 export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today: string }) {
@@ -135,6 +169,7 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
         canEdit={selected.group.canEditUnits}
         onBack={() => setSelected(null)}
       />
+      <NextCleanCard card={selected.card} />
       {selected.group.canAddJob ? (
         <Button variant="outline" onClick={() => openAdd(selected.card.unit.id)}>
           <CalendarClock className="size-4" />
