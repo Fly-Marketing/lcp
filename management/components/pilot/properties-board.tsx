@@ -119,7 +119,7 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
             highlight
             title={
               <>
-                <span className="mr-2 w-full font-heading text-lg font-semibold sm:w-auto">{g.buildingName}</span>
+                <span className="mr-2 w-full font-medium sm:w-auto">{g.buildingName}</span>
                 {(["Ready", "Needs clean", "Flagged"] as UnitStatus[]).map((s) => (
                   <span key={s} className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_STYLE[s].chip)}>
                     {g.counts[s]} {s.toLowerCase()}
