@@ -116,13 +116,14 @@ export function AccountAdmin({ data }: { data: AdminData }) {
               <AccountForm data={data} account={a} onCancel={() => setEditingId(null)} onDone={() => setEditingId(null)} />
             ) : (
               <>
-                <div className="flex justify-end">
-                  <Button variant="outline" size="sm" onClick={() => setEditingId(a.id)}>
-                    <Pencil className="size-4" />
-                    Edit
-                  </Button>
-                </div>
-                <dl className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-3">
+                <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+                  <div className="flex justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setEditingId(a.id)}>
+                      <Pencil className="size-4" />
+                      Edit
+                    </Button>
+                  </div>
+                  <dl className="grid gap-4 text-sm sm:grid-cols-3">
                   <div>
                     <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mobile</dt>
                     <dd className="mt-1">{formatPhone(a.phone)}</dd>
@@ -138,6 +139,7 @@ export function AccountAdmin({ data }: { data: AdminData }) {
                     </dd>
                   </div>
                 </dl>
+                </div>
               </>
             )}
 
