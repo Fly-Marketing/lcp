@@ -120,7 +120,7 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
               folded[g.buildingId] ? "border-border bg-card hover:bg-muted/40" : "border-[#e88684] bg-[#e88684]/10"
             )}
           >
-            <h2 className="mr-2 font-heading text-lg font-semibold">{g.buildingName}</h2>
+            <h2 className="mr-2 w-full font-heading text-lg font-semibold sm:w-auto">{g.buildingName}</h2>
             {(["Ready", "Needs clean", "Flagged"] as UnitStatus[]).map((s) => (
               <span key={s} className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_STYLE[s].chip)}>
                 {g.counts[s]} {s.toLowerCase()}
