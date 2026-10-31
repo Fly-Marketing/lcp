@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calendar, Clock, ChevronRight } from "lucide-react";
+import { Calendar, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PilotJob } from "@/lib/pilot/types";
 
@@ -49,10 +49,6 @@ export function PilotJobCard({
 
         {footer}
 
-        <div className="flex items-center justify-center gap-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground">
-          View job
-          <ChevronRight className="size-4" />
-        </div>
       </div>
     </Link>
   );
