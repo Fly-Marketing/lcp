@@ -163,31 +163,10 @@ export function AccountAdmin({ data }: { data: AdminData }) {
                     </dd>
                   </div>
                 </dl>
+                <DeviceList devices={a.deviceList} editing={editingId === a.id} busy={isPending} onRemove={(deviceId, label) => run(() => revokeOneDevice(a.id, deviceId), `${label} signed out`)} />
                 </div>
               </>
             )}
-
-            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-              <h3 className="text-sm font-semibold">Signed-in devices</h3>
-              {a.deviceList.length === 0 ? <p className="text-muted-foreground">No devices are signed in.</p> : null}
-              {a.deviceList.map((d) => (
-                <div key={d.id} className="flex items-center gap-3">
-                  <p className="flex-1 text-sm">{d.label}</p>
-                  <p className="text-xs text-muted-foreground">Last used {d.lastSeen}</p>
-                  {editingId === a.id ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      aria-label={`Remove ${d.label}`}
-                      disabled={isPending}
-                      onClick={() => run(() => revokeOneDevice(a.id, d.id), "Device signed out")}
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  ) : null}
-                </div>
-              ))}
-            </div>
 
             {issued?.accountId === a.id ? (
               <div role="status" className="rounded-xl border border-green-300 bg-green-50 p-4 text-sm text-green-900">
@@ -506,6 +485,45 @@ function PropertyAssignments({ account, data }: { account: AdminAccount; data: A
         ) : null}
       </div>
     </div>
+    </CollapsibleCard>
+  );
+}
+
+// Signed-in devices, as a dropdown inside the About card. Remove shows only in Edit mode.
+function DeviceList({
+  devices,
+  editing,
+  busy,
+  onRemove,
+}: {
+  devices: AdminAccount["deviceList"];
+  editing: boolean;
+  busy: boolean;
+  onRemove: (deviceId: string, label: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <CollapsibleCard
+      id={`devices-${devices.map((d) => d.id).join("-") || "none"}`}
+      open={open}
+      onToggle={() => setOpen((o) => !o)}
+      title={<span className="font-medium">Signed-in devices</span>}
+      badge={<span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{devices.length}</span>}
+    >
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4">
+        {devices.length === 0 ? <p className="text-muted-foreground">No devices are signed in.</p> : null}
+        {devices.map((d) => (
+          <div key={d.id} className="flex items-center gap-3">
+            <p className="flex-1 text-sm">{d.label}</p>
+            <p className="text-xs text-muted-foreground">Last used {d.lastSeen}</p>
+            {editing ? (
+              <Button variant="ghost" size="sm" aria-label={`Remove ${d.label}`} disabled={busy} onClick={() => onRemove(d.id, d.label)}>
+                <Trash2 className="size-4 text-destructive" />
+              </Button>
+            ) : null}
+          </div>
+        ))}
+      </div>
     </CollapsibleCard>
   );
 }
