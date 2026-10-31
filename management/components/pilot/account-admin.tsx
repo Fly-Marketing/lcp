@@ -112,12 +112,35 @@ export function AccountAdmin({ data }: { data: AdminData }) {
           }
         >
           <div className="flex flex-col gap-4 text-sm">
+            <div className="flex flex-wrap gap-2">
+            <Button variant="outline" disabled={isPending || !a.active} onClick={() => giveCode(a)}>
+            <KeyRound className="size-4" />
+            Give login code
+            </Button>
+            <Button
+            variant="outline"
+            disabled={isPending || a.devices === 0}
+            onClick={() => run(() => revokeAccountDevices(a.id), "Devices signed out")}
+            >
+            <LogOut className="size-4" />
+            Sign out devices
+            </Button>
+            <Button
+            variant="outline"
+            disabled={isPending}
+            onClick={() => run(() => setAccountActive(a.id, !a.active), a.active ? "Account deactivated" : "Account activated")}
+            >
+            <Power className="size-4" />
+            {a.active ? "Deactivate" : "Activate"}
+            </Button>
+            </div>
             {editingId === a.id ? (
               <AccountForm data={data} account={a} onCancel={() => setEditingId(null)} onDone={() => setEditingId(null)} />
             ) : (
               <>
                 <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-                  <div className="flex justify-end">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-sm font-semibold">About</h3>
                     <Button variant="outline" size="sm" onClick={() => setEditingId(a.id)}>
                       <Pencil className="size-4" />
                       Edit
@@ -156,30 +179,6 @@ export function AccountAdmin({ data }: { data: AdminData }) {
 
           </div>
         </CollapsibleCard>
-          {open[a.id] ? (
-          <div className="flex flex-wrap gap-2">
-              <Button variant="outline" disabled={isPending || !a.active} onClick={() => giveCode(a)}>
-                <KeyRound className="size-4" />
-                Give login code
-              </Button>
-              <Button
-                variant="outline"
-                disabled={isPending || a.devices === 0}
-                onClick={() => run(() => revokeAccountDevices(a.id), "Devices signed out")}
-              >
-                <LogOut className="size-4" />
-                Sign out devices
-              </Button>
-              <Button
-                variant="outline"
-                disabled={isPending}
-                onClick={() => run(() => setAccountActive(a.id, !a.active), a.active ? "Account deactivated" : "Account activated")}
-              >
-                <Power className="size-4" />
-                {a.active ? "Deactivate" : "Activate"}
-              </Button>
-            </div>
-          ) : null}
         </div>
       ))}
 
