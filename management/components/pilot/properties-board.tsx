@@ -115,7 +115,7 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
             type="button"
             aria-expanded={!folded[g.buildingId]}
             onClick={() => setFolded((f) => ({ ...f, [g.buildingId]: !f[g.buildingId] }))}
-            className="flex w-full flex-wrap items-center gap-2 text-left"
+            className="flex w-full flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
           >
             <h2 className="mr-2 font-heading text-lg font-semibold">{g.buildingName}</h2>
             {(["Ready", "Needs clean", "Flagged"] as UnitStatus[]).map((s) => (
