@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CalendarClock, CheckCircle2, ChevronDown, ChevronRight, Flag, Plus, Sparkles } from "lucide-react";
+import { CalendarClock, CheckCircle2, ChevronRight, Flag, Plus, Sparkles } from "lucide-react";
 
 import { AddJobSheet, type AddJobUnit } from "@/components/pilot/add-job-form";
+import { CollapsibleCard } from "@/components/pilot/collapsible-card";
 import { UnitPanel, type UnitView } from "@/components/pilot/unit-panel";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -110,32 +111,23 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
       </div>
 
       {groups.map((g) => (
-        <section key={g.buildingId} className="flex flex-col gap-3">
-          <button
-            type="button"
-            aria-expanded={!!opened[g.buildingId]}
-            onClick={() => setOpened((o) => ({ ...o, [g.buildingId]: !o[g.buildingId] }))}
-            className={cn(
-              "flex w-full flex-wrap items-center gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors",
-              opened[g.buildingId] ? "border-pink-500 bg-card" : "border-border bg-card hover:bg-muted/40"
-            )}
+        <section key={g.buildingId}>
+          <CollapsibleCard
+            id={`property-${g.buildingId}`}
+            open={!!opened[g.buildingId]}
+            onToggle={() => setOpened((o) => ({ ...o, [g.buildingId]: !o[g.buildingId] }))}
+            highlight
+            title={
+              <>
+                <span className="mr-2 w-full font-heading text-lg font-semibold sm:w-auto">{g.buildingName}</span>
+                {(["Ready", "Needs clean", "Flagged"] as UnitStatus[]).map((s) => (
+                  <span key={s} className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_STYLE[s].chip)}>
+                    {g.counts[s]} {s.toLowerCase()}
+                  </span>
+                ))}
+              </>
+            }
           >
-            <h2 className="mr-2 w-full font-heading text-lg font-semibold sm:w-auto">{g.buildingName}</h2>
-            {(["Ready", "Needs clean", "Flagged"] as UnitStatus[]).map((s) => (
-              <span key={s} className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_STYLE[s].chip)}>
-                {g.counts[s]} {s.toLowerCase()}
-              </span>
-            ))}
-            <ChevronDown
-              aria-hidden
-              className={cn(
-                "ml-auto size-4 shrink-0 transition-transform",
-                opened[g.buildingId] ? "rotate-180 text-pink-600" : "text-muted-foreground"
-              )}
-            />
-          </button>
-
-          {opened[g.buildingId] ? (
           <div className="flex flex-col gap-2">
             {g.cards.map((c) => {
               const Icon = STATUS_STYLE[c.status].icon;
@@ -174,7 +166,7 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
               <p className="text-sm text-muted-foreground">No units in this property yet.</p>
             ) : null}
           </div>
-          ) : null}
+          </CollapsibleCard>
         </section>
       ))}
     </div>

@@ -1,15 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import {
-  BriefcaseBusiness,
-  CalendarDays,
-  CalendarX2,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, CalendarX2, ChevronLeft, ChevronRight } from "lucide-react";
 
+import { CollapsibleCard } from "@/components/pilot/collapsible-card";
 import { HistoryRow } from "@/components/pilot/history-row";
 import { Button } from "@/components/ui/button";
 import type { PilotJob } from "@/lib/pilot/types";
@@ -40,6 +34,12 @@ function moveMonth(date: Date, offset: number) {
   return new Date(date.getFullYear(), date.getMonth() + offset, 1);
 }
 
+const badge = (text: string) => (
+  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{text}</span>
+);
+
+type Section = "current" | "finished";
+
 export function HistoryList({
   hrefBase,
   jobs,
@@ -65,8 +65,9 @@ export function HistoryList({
 }) {
   const currentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const [finishedMonth, setFinishedMonth] = useState(currentMonth);
-  const [isCurrentOpen, setIsCurrentOpen] = useState(true);
-  const [isFinishedOpen, setIsFinishedOpen] = useState(false);
+  // One section is open at a time: opening one closes the other.
+  const [openSection, setOpenSection] = useState<Section | null>("current");
+  const toggle = (section: Section) => setOpenSection((current) => (current === section ? null : section));
 
   const currentJobs = jobs.filter((job) => !job.completedAt && !job.cancelledAt);
   const finishedJobs = jobs.filter(
@@ -88,135 +89,101 @@ export function HistoryList({
 
       {header}
 
-      <button
-        type="button"
-        aria-expanded={isCurrentOpen}
-        aria-controls="current-jobs"
-        onClick={() => {
-          const nextOpen = !isCurrentOpen;
-          setIsCurrentOpen(nextOpen);
-          if (nextOpen) setIsFinishedOpen(false);
-        }}
-        className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
+      <CollapsibleCard
+        id="current-jobs"
+        open={openSection === "current"}
+        onToggle={() => toggle("current")}
+        icon={<CalendarDays className="size-4 text-primary" />}
+        title={<span className="font-medium">{todoLabel}</span>}
+        badge={badge(`${currentJobs.length} ${currentJobs.length === 1 ? "job" : "jobs"}`)}
       >
-        <CalendarDays className="size-4 text-primary" />
-        <span className="font-medium">{todoLabel}</span>
-        <span className="ml-auto rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-          {currentJobs.length} {currentJobs.length === 1 ? "job" : "jobs"}
-        </span>
-        <ChevronDown
-          className={`size-4 text-muted-foreground transition-transform ${isCurrentOpen ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {isCurrentOpen ? (
-        <div id="current-jobs" className="flex flex-col gap-3">
-          {currentJobs.length > 0 ? (
-            currentJobs.map((job) => (
-              <HistoryRow
-                key={job.id}
-                hrefBase={hrefBase}
-                variant={variant}
-                job={job}
-                isSelected={job.id === selectedJobId}
-              />
-            ))
-          ) : (
-            <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-                <BriefcaseBusiness className="size-5" />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Nothing to do yet</p>
-                <p className="text-xs text-muted-foreground">{emptyTodoHint}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      <button
-        type="button"
-        aria-expanded={isFinishedOpen}
-        aria-controls="finished-jobs"
-        onClick={() => {
-          const nextOpen = !isFinishedOpen;
-          setIsFinishedOpen(nextOpen);
-          if (nextOpen) setIsCurrentOpen(false);
-        }}
-        className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
-      >
-        <CalendarDays className="size-4 text-primary" />
-        <span className="font-medium">Completed</span>
-        <ChevronDown
-          className={`ml-auto size-4 text-muted-foreground transition-transform ${isFinishedOpen ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {isFinishedOpen ? (
-        <div id="finished-jobs" className="flex flex-col gap-3">
-          <div className="flex justify-end">
-            <div className="flex items-center rounded-lg border border-border bg-card p-1 text-xs shadow-sm">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label="Previous month"
-                onClick={() => setFinishedMonth((month) => moveMonth(month, -1))}
-              >
-                <ChevronLeft className="size-4" />
-              </Button>
-              <span className="min-w-28 px-2 text-center font-medium">
-                {formatMonth(finishedMonth)}
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label="Next month"
-                disabled={isViewingCurrentMonth}
-                onClick={() => setFinishedMonth((month) => moveMonth(month, 1))}
-              >
-                <ChevronRight className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="xs"
-                className="ml-1"
-                disabled={isViewingCurrentMonth}
-                onClick={() => setFinishedMonth(currentMonth)}
-              >
-                Now
-              </Button>
+        {currentJobs.length > 0 ? (
+          currentJobs.map((job) => (
+            <HistoryRow
+              key={job.id}
+              hrefBase={hrefBase}
+              variant={variant}
+              job={job}
+              isSelected={job.id === selectedJobId}
+            />
+          ))
+        ) : (
+          <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+              <BriefcaseBusiness className="size-5" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Nothing to do yet</p>
+              <p className="text-xs text-muted-foreground">{emptyTodoHint}</p>
             </div>
           </div>
+        )}
+      </CollapsibleCard>
 
-          {finishedJobs.length > 0 ? (
-            finishedJobs.map((job) => (
-              <HistoryRow
-                key={job.id}
-                hrefBase={hrefBase}
-                variant={variant}
-                job={job}
-                isSelected={job.id === selectedJobId}
-              />
-            ))
-          ) : (
-            <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-                <CalendarX2 className="size-5" />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">No completed jobs this month</p>
-                <p className="text-xs text-muted-foreground">
-                  Choose another month to view earlier jobs.
-                </p>
-              </div>
-            </div>
-          )}
+      <CollapsibleCard
+        id="finished-jobs"
+        open={openSection === "finished"}
+        onToggle={() => toggle("finished")}
+        icon={<CalendarDays className="size-4 text-primary" />}
+        title={<span className="font-medium">Completed</span>}
+      >
+        <div className="flex justify-end">
+          <div className="flex items-center rounded-lg border border-border bg-card p-1 text-xs shadow-sm">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label="Previous month"
+              onClick={() => setFinishedMonth((month) => moveMonth(month, -1))}
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <span className="min-w-28 px-2 text-center font-medium">{formatMonth(finishedMonth)}</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label="Next month"
+              disabled={isViewingCurrentMonth}
+              onClick={() => setFinishedMonth((month) => moveMonth(month, 1))}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="xs"
+              className="ml-1"
+              disabled={isViewingCurrentMonth}
+              onClick={() => setFinishedMonth(currentMonth)}
+            >
+              Now
+            </Button>
+          </div>
         </div>
-      ) : null}
+
+        {finishedJobs.length > 0 ? (
+          finishedJobs.map((job) => (
+            <HistoryRow
+              key={job.id}
+              hrefBase={hrefBase}
+              variant={variant}
+              job={job}
+              isSelected={job.id === selectedJobId}
+            />
+          ))
+        ) : (
+          <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+              <CalendarX2 className="size-5" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-foreground">No completed jobs this month</p>
+              <p className="text-xs text-muted-foreground">Choose another month to view earlier jobs.</p>
+            </div>
+          </div>
+        )}
+      </CollapsibleCard>
     </div>
   );
 }
