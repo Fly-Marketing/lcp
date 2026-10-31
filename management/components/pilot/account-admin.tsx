@@ -135,38 +135,41 @@ export function AccountAdmin({ data }: { data: AdminData }) {
             {a.active ? "Deactivate" : "Activate"}
             </Button>
             </div>
-            {editingId === a.id ? (
-              <AccountForm data={data} account={a} onCancel={() => setEditingId(null)} onDone={() => setEditingId(null)} />
-            ) : (
-              <>
-                <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-semibold">About</h3>
-                    <Button variant="outline" size="sm" onClick={() => setEditingId(a.id)}>
-                      <Pencil className="size-4" />
-                      Edit
-                    </Button>
-                  </div>
-                  <dl className="grid gap-4 text-sm sm:grid-cols-3">
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold">About</h3>
+                <Button variant="outline" size="sm" onClick={() => setEditingId(editingId === a.id ? null : a.id)}>
+                  {editingId === a.id ? null : <Pencil className="size-4" />}
+                  {editingId === a.id ? "Cancel" : "Edit"}
+                </Button>
+              </div>
+              {editingId === a.id ? (
+                <AccountForm data={data} account={a} onCancel={() => setEditingId(null)} onDone={() => setEditingId(null)} />
+              ) : (
+                <dl className="grid gap-4 text-sm sm:grid-cols-3">
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mobile</dt>
-                    <dd className="mt-1">{formatPhone(a.phone)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</dt>
-                    <dd className="mt-1">{a.active ? "Active" : "Inactive"}</dd>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mobile</dt>
+                  <dd className="mt-1">{formatPhone(a.phone)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Signed in on</dt>
-                    <dd className="mt-1">
-                      {a.devices} {a.devices === 1 ? "device" : "devices"}
-                    </dd>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</dt>
+                  <dd className="mt-1">{a.active ? "Active" : "Inactive"}</dd>
                   </div>
-                </dl>
-                <DeviceList devices={a.deviceList} editing={editingId === a.id} busy={isPending} onRemove={(deviceId, label) => run(() => revokeOneDevice(a.id, deviceId), `${label} signed out`)} />
-                </div>
-              </>
-            )}
+                  <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Signed in on</dt>
+                  <dd className="mt-1">
+                  {a.devices} {a.devices === 1 ? "device" : "devices"}
+                  </dd>
+                  </div>
+                  </dl>
+              )}
+              <DeviceList
+                devices={a.deviceList}
+                editing={editingId === a.id}
+                busy={isPending}
+                onRemove={(deviceId, label) => run(() => revokeOneDevice(a.id, deviceId), `${label} signed out`)}
+              />
+            </div>
 
             {issued?.accountId === a.id ? (
               <div role="status" className="rounded-xl border border-green-300 bg-green-50 p-4 text-sm text-green-900">
@@ -501,12 +504,14 @@ function DeviceList({
   busy: boolean;
   onRemove: (deviceId: string, label: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  // Editing opens the device list; otherwise it opens and closes on the user's click.
+  const open = editing || manualOpen;
   return (
     <CollapsibleCard
       id={`devices-${devices.map((d) => d.id).join("-") || "none"}`}
       open={open}
-      onToggle={() => setOpen((o) => !o)}
+      onToggle={() => setManualOpen((o) => !o)}
       title={<span className="font-medium">Signed-in devices</span>}
       badge={<span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{devices.length}</span>}
     >
