@@ -172,10 +172,8 @@ export function AccountAdmin({ data }: { data: AdminData }) {
               {a.deviceList.length === 0 ? <p className="text-muted-foreground">No devices are signed in.</p> : null}
               {a.deviceList.map((d) => (
                 <div key={d.id} className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <p className="text-sm">{d.label}</p>
-                    <p className="text-xs text-muted-foreground">Last used {d.lastSeen}</p>
-                  </div>
+                  <p className="flex-1 text-sm">{d.label}</p>
+                  <p className="text-xs text-muted-foreground">Last used {d.lastSeen}</p>
                   {editingId === a.id ? (
                     <Button
                       variant="ghost"
