@@ -117,7 +117,7 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
             onClick={() => setOpened((o) => ({ ...o, [g.buildingId]: !o[g.buildingId] }))}
             className={cn(
               "flex w-full flex-wrap items-center gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors",
-              opened[g.buildingId] ? "border-pink-500 bg-pink-50" : "border-border bg-card hover:bg-muted/40"
+              opened[g.buildingId] ? "border-pink-500 bg-card" : "border-border bg-card hover:bg-muted/40"
             )}
           >
             <h2 className="mr-2 w-full font-heading text-lg font-semibold sm:w-auto">{g.buildingName}</h2>
