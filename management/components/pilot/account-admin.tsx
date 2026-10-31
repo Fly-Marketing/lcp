@@ -156,28 +156,30 @@ export function AccountAdmin({ data }: { data: AdminData }) {
 
           </div>
         </CollapsibleCard>
+          {open[a.id] ? (
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" disabled={isPending || !a.active} onClick={() => giveCode(a)}>
-              <KeyRound className="size-4" />
-              Give login code
-            </Button>
-            <Button
-              variant="outline"
-              disabled={isPending || a.devices === 0}
-              onClick={() => run(() => revokeAccountDevices(a.id), "Devices signed out")}
-            >
-              <LogOut className="size-4" />
-              Sign out devices
-            </Button>
-            <Button
-              variant="outline"
-              disabled={isPending}
-              onClick={() => run(() => setAccountActive(a.id, !a.active), a.active ? "Account deactivated" : "Account activated")}
-            >
-              <Power className="size-4" />
-              {a.active ? "Deactivate" : "Activate"}
-            </Button>
-          </div>
+              <Button variant="outline" disabled={isPending || !a.active} onClick={() => giveCode(a)}>
+                <KeyRound className="size-4" />
+                Give login code
+              </Button>
+              <Button
+                variant="outline"
+                disabled={isPending || a.devices === 0}
+                onClick={() => run(() => revokeAccountDevices(a.id), "Devices signed out")}
+              >
+                <LogOut className="size-4" />
+                Sign out devices
+              </Button>
+              <Button
+                variant="outline"
+                disabled={isPending}
+                onClick={() => run(() => setAccountActive(a.id, !a.active), a.active ? "Account deactivated" : "Account activated")}
+              >
+                <Power className="size-4" />
+                {a.active ? "Deactivate" : "Activate"}
+              </Button>
+            </div>
+          ) : null}
         </div>
       ))}
 
