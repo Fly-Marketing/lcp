@@ -1,17 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Pencil, Plus } from "lucide-react";
+import { Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-import { MasterDetail } from "@/components/pilot/master-detail";
+import { CollapsibleCard } from "@/components/pilot/collapsible-card";
+import { UnitPanel } from "@/components/pilot/unit-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createProperty, createUnit, updateProperty, updateUnit } from "@/app/pilot/admin/actions";
-import { UnitPanel } from "@/components/pilot/unit-panel";
 import type { AdminData } from "@/lib/auth/admin";
-import { cn } from "@/lib/utils";
 
 type Building = AdminData["buildings"][number];
 type Unit = AdminData["units"][number];
@@ -19,198 +18,176 @@ type Unit = AdminData["units"][number];
 const selectCls = "h-8 w-full rounded-lg border border-input bg-background px-2 text-sm";
 const modeLabel = (mode: "lcp" | "self") => (mode === "self" ? "Self-managed" : "Managed by LCP");
 const money = (value: number | null) => (value === null ? "No rate set" : `$${value.toFixed(2)}`);
+const testBadge = (
+  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">Test</span>
+);
+const countBadge = (text: string) => (
+  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{text}</span>
+);
 
-// Properties follow the same pattern as the Properties page: a list of cards and a full card for
-// the selected one. Adding and editing happen inside that panel, with no extra side sheet.
+// Properties are dropdowns. Opening one shows its details, then its units. Each unit is a dropdown
+// too, with its details editor and pricing. Adding and editing happen in place.
 export function PropertyAdmin({ data }: { data: AdminData }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [form, setForm] = useState<"create" | "edit" | null>(null);
-  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
-  // Only used for adding a unit. Editing happens on the unit card.
-  const [addingUnit, setAddingUnit] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [openBuildings, setOpenBuildings] = useState<Record<string, boolean>>({});
+  const [openUnits, setOpenUnits] = useState<Record<string, boolean>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [addingUnitTo, setAddingUnitTo] = useState<string | null>(null);
 
-  const selected = data.buildings.find((b) => b.id === selectedId) ?? null;
   const ownerName = (customerId: string | null) => data.customers.find((c) => c.id === customerId)?.name ?? "No owner";
   const unitsOf = (buildingId: string) => data.units.filter((u) => u.buildingId === buildingId);
+  const flip = (setter: typeof setOpenBuildings, key: string) => setter((o) => ({ ...o, [key]: !o[key] }));
 
-  function select(id: string | null) {
-    setSelectedId(id);
-    setForm(null);
-    setSelectedUnitId(null);
-    setAddingUnit(false);
-  }
-
-  const list = (
+  return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h2 className="font-heading text-xl font-semibold">Properties</h2>
           <p className="text-sm text-muted-foreground">Buildings, owners and units</p>
         </div>
-        <Button
-          onClick={() => {
-            select(null);
-            setForm("create");
-          }}
-        >
+        <Button onClick={() => setAdding(true)} disabled={adding}>
           <Plus className="size-4" />
           Add property
         </Button>
       </div>
 
-      <div className="flex flex-col gap-2">
-        {data.buildings.map((b) => (
-          <button
+      {adding ? (
+        <CollapsibleCard
+          id="new-property"
+          open
+          onToggle={() => setAdding(false)}
+          title={<span className="font-medium">New property</span>}
+        >
+          <PropertyForm
+            data={data}
+            onCancel={() => setAdding(false)}
+            onDone={(id) => {
+              setAdding(false);
+              if (id) setOpenBuildings((o) => ({ ...o, [id]: true }));
+            }}
+          />
+        </CollapsibleCard>
+      ) : null}
+
+      {data.buildings.map((b) => {
+        const units = unitsOf(b.id);
+        return (
+          <CollapsibleCard
             key={b.id}
-            type="button"
-            onClick={() => select(b.id)}
-            className={cn(
-              "flex items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors",
-              b.id === selectedId && form !== "create" ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted/40"
-            )}
+            id={`building-${b.id}`}
+            open={!!openBuildings[b.id]}
+            onToggle={() => flip(setOpenBuildings, b.id)}
+            title={
+              <>
+                <span className="font-medium">{b.name}</span>
+                {b.isTest ? testBadge : null}
+                <span className="text-xs text-muted-foreground">
+                  {modeLabel(b.mode)} · {ownerName(b.customerId)}
+                </span>
+              </>
+            }
+            badge={countBadge(`${units.length} ${units.length === 1 ? "unit" : "units"}`)}
           >
-            <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-semibold">
-                {b.name}
-                {b.isTest ? <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">Test</span> : null}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {modeLabel(b.mode)} · {ownerName(b.customerId)}
-              </p>
+            <div className="flex flex-col gap-4">
+              {editingId === b.id ? (
+                <PropertyForm
+                  data={data}
+                  building={b}
+                  onCancel={() => setEditingId(null)}
+                  onDone={() => setEditingId(null)}
+                />
+              ) : (
+                <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-sm font-semibold">Details</h3>
+                    <Button variant="outline" size="sm" onClick={() => setEditingId(b.id)}>
+                      <Pencil className="size-4" />
+                      Edit
+                    </Button>
+                  </div>
+                  <dl className="grid gap-4 text-sm sm:grid-cols-3">
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Address</dt>
+                      <dd className="mt-1">{b.address ?? "Not set"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Management</dt>
+                      <dd className="mt-1">{modeLabel(b.mode)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Owner</dt>
+                      <dd className="mt-1">{ownerName(b.customerId)}</dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold">Units</h3>
+                <Button size="sm" disabled={addingUnitTo !== null} onClick={() => setAddingUnitTo(b.id)}>
+                  <Plus className="size-4" />
+                  Add unit
+                </Button>
+              </div>
+
+              {addingUnitTo === b.id ? (
+                <NewUnitForm buildingId={b.id} onDone={() => setAddingUnitTo(null)} />
+              ) : null}
+
+              {units.map((u) => (
+                <CollapsibleCard
+                  key={u.id}
+                  id={`unit-${u.id}`}
+                  open={!!openUnits[u.id]}
+                  onToggle={() => flip(setOpenUnits, u.id)}
+                  title={<span className="font-medium">{u.name}</span>}
+                  badge={<span className="text-sm text-muted-foreground">{money(u.rate)}</span>}
+                >
+                  <div className="flex flex-col gap-6">
+                    <UnitPanel
+                      unit={{
+                        id: u.id,
+                        name: u.name,
+                        buildingName: b.name,
+                        address: u.address,
+                        accessInstructions: u.accessInstructions,
+                        importantNotes: u.importantNotes,
+                        specialRequirements: u.specialRequirements,
+                        checklistItems: u.checklistItems,
+                      }}
+                      canEdit
+                    />
+                    <UnitPricingForm unit={u} />
+                  </div>
+                </CollapsibleCard>
+              ))}
+
+              {units.length === 0 && addingUnitTo !== b.id ? (
+                <p className="text-sm text-muted-foreground">No units in this property yet.</p>
+              ) : null}
+              </div>
             </div>
-            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-              {unitsOf(b.id).length} {unitsOf(b.id).length === 1 ? "unit" : "units"}
-            </span>
-            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-          </button>
-        ))}
-        {data.buildings.length === 0 ? <p className="text-sm text-muted-foreground">No properties yet. Add the first one.</p> : null}
-      </div>
+          </CollapsibleCard>
+        );
+      })}
+
+      {data.buildings.length === 0 && !adding ? (
+        <p className="text-sm text-muted-foreground">No properties yet. Add the first one.</p>
+      ) : null}
     </div>
   );
-
-  let detail: React.ReactNode = null;
-  if (form === "create") {
-    detail = (
-      <PropertyForm
-        key="new"
-        data={data}
-        onCancel={() => setForm(null)}
-        onDone={(id) => {
-          setForm(null);
-          if (id) setSelectedId(id);
-        }}
-      />
-    );
-  } else if (selected && selectedUnitId && unitsOf(selected.id).some((u) => u.id === selectedUnitId)) {
-    const unit = unitsOf(selected.id).find((u) => u.id === selectedUnitId)!;
-    detail = (
-      <UnitDetail
-        key={unit.id}
-        unit={unit}
-        buildingName={selected.name}
-        onBack={() => setSelectedUnitId(null)}
-      />
-    );
-  } else if (selected) {
-    detail = (
-      <div className="flex flex-col gap-4">
-        <button
-          type="button"
-          onClick={() => select(null)}
-          className="flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground md:hidden"
-        >
-          <ChevronLeft className="size-4" />
-          All properties
-        </button>
-
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h2 className="font-heading text-xl font-semibold">{selected.name}</h2>
-            <p className="text-sm text-muted-foreground">{modeLabel(selected.mode)}</p>
-          </div>
-          {form !== "edit" ? (
-            <Button variant="outline" size="sm" onClick={() => setForm("edit")}>
-              <Pencil className="size-4" />
-              Edit
-            </Button>
-          ) : null}
-        </div>
-
-        {form === "edit" ? (
-          <PropertyForm
-            key={selected.id}
-            inline
-            data={data}
-            building={selected}
-            onCancel={() => setForm(null)}
-            onDone={() => setForm(null)}
-          />
-        ) : (
-        <dl className="grid gap-4 rounded-xl border border-border bg-card p-4 text-sm sm:grid-cols-3">
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Address</dt>
-            <dd className="mt-1">{selected.address ?? "Not set"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Management</dt>
-            <dd className="mt-1">{modeLabel(selected.mode)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Owner</dt>
-            <dd className="mt-1">{ownerName(selected.customerId)}</dd>
-          </div>
-        </dl>
-        )}
-
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <h3 className="text-sm font-semibold">Units</h3>
-            <p className="text-xs text-muted-foreground">Select a unit to edit its details and rate</p>
-          </div>
-          <Button size="sm" disabled={addingUnit} onClick={() => setAddingUnit(true)}>
-            <Plus className="size-4" />
-            Add unit
-          </Button>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          {addingUnit ? <NewUnitForm key="new-unit" buildingId={selected.id} onDone={() => setAddingUnit(false)} /> : null}
-          {unitsOf(selected.id).map((u) => (
-            <button
-              key={u.id}
-              type="button"
-              onClick={() => setSelectedUnitId(u.id)}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left text-sm transition-colors hover:bg-muted/40"
-            >
-              <span className="flex-1 truncate font-medium">{u.name}</span>
-              <span className="text-muted-foreground">{money(u.rate)}</span>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-            </button>
-          ))}
-          {unitsOf(selected.id).length === 0 && !addingUnit ? (
-            <p className="text-sm text-muted-foreground">No units in this property yet.</p>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
-
-  return <MasterDetail list={list} detail={detail} />;
 }
 
-// Create or edit a property, shown in the detail panel in place of the property card.
+// Create or edit a property. Create also offers the test flag.
 function PropertyForm({
   data,
   building,
-  inline = false,
   onCancel,
   onDone,
 }: {
   data: AdminData;
   building?: Building;
-  // inline: replaces the details card in place (edit). Otherwise it fills the panel (add).
-  inline?: boolean;
   onCancel: () => void;
   onDone: (createdId?: string) => void;
 }) {
@@ -248,8 +225,8 @@ function PropertyForm({
     });
   }
 
-  const fields = (
-    <>
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="property-name">Property name</Label>
         <Input id="property-name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -276,7 +253,7 @@ function PropertyForm({
           </select>
         </div>
       </div>
-      <p className="text-xs text-muted-foreground">Owners are created in Accounts.</p>
+      <p className="text-xs text-muted-foreground">Owners are created in People.</p>
       {!building ? (
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" className="mt-1" checked={isTest} onChange={(e) => setIsTest(e.target.checked)} />
@@ -287,51 +264,18 @@ function PropertyForm({
         </label>
       ) : null}
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
-    </>
-  );
-
-  const buttons = (
-    <div className="flex justify-end gap-2">
-      <Button variant="ghost" disabled={isPending} onClick={onCancel}>Cancel</Button>
-      <Button disabled={isPending || !name.trim()} onClick={submit}>
-        {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-        {building ? "Save property" : "Create property"}
-      </Button>
-    </div>
-  );
-
-  if (inline) {
-    return (
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
-        {fields}
-        {buttons}
+      <div className="flex justify-end gap-2">
+        <Button variant="ghost" disabled={isPending} onClick={onCancel}>Cancel</Button>
+        <Button disabled={isPending || !name.trim()} onClick={submit}>
+          {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+          {building ? "Save property" : "Create property"}
+        </Button>
       </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground md:hidden"
-      >
-        <ChevronLeft className="size-4" />
-        Back
-      </button>
-
-      <div>
-        <h2 className="font-heading text-xl font-semibold">Add property</h2>
-        <p className="text-sm text-muted-foreground">Create the property first, then add its units and rates.</p>
-      </div>
-
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">{fields}</div>
-      {buttons}
     </div>
   );
 }
 
-// Adds a unit inside the property. Its details and rate are edited on the unit card.
+// Adds a unit inside the property. Its details and rate are edited on the unit's dropdown.
 function NewUnitForm({ buildingId, onDone }: { buildingId: string; onDone: () => void }) {
   const [isPending, startTransition] = useTransition();
   const [unitName, setUnitName] = useState("");
@@ -366,34 +310,6 @@ function NewUnitForm({ buildingId, onDone }: { buildingId: string; onDone: () =>
           Add unit
         </Button>
       </div>
-    </div>
-  );
-}
-
-// The full unit card: the same details editor the owner and cleaner views use, plus pricing and schedule.
-function UnitDetail({ unit, buildingName, onBack }: { unit: Unit; buildingName: string; onBack: () => void }) {
-  return (
-    <div className="flex flex-col gap-6">
-      <button type="button" onClick={onBack} className="flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground">
-        <ChevronLeft className="size-4" />
-        Back to {buildingName}
-      </button>
-
-      <UnitPanel
-        unit={{
-          id: unit.id,
-          name: unit.name,
-          buildingName,
-          address: unit.address,
-          accessInstructions: unit.accessInstructions,
-          importantNotes: unit.importantNotes,
-          specialRequirements: unit.specialRequirements,
-          checklistItems: unit.checklistItems,
-        }}
-        canEdit
-      />
-
-      <UnitPricingForm unit={unit} />
     </div>
   );
 }
