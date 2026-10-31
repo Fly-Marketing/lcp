@@ -91,8 +91,8 @@ export function AccountAdmin({ data }: { data: AdminData }) {
       ) : null}
 
       {data.accounts.map((a) => (
+        <div key={a.id} className="flex flex-col gap-3">
         <CollapsibleCard
-          key={a.id}
           id={`person-${a.id}`}
           open={!!open[a.id]}
           onToggle={() => setOpen((o) => ({ ...o, [a.id]: !o[a.id] }))}
@@ -152,30 +152,31 @@ export function AccountAdmin({ data }: { data: AdminData }) {
 
             <PropertyAssignments account={a} data={data} />
 
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" disabled={isPending || !a.active} onClick={() => giveCode(a)}>
-                <KeyRound className="size-4" />
-                Give login code
-              </Button>
-              <Button
-                variant="outline"
-                disabled={isPending || a.devices === 0}
-                onClick={() => run(() => revokeAccountDevices(a.id), "Devices signed out")}
-              >
-                <LogOut className="size-4" />
-                Sign out devices
-              </Button>
-              <Button
-                variant="outline"
-                disabled={isPending}
-                onClick={() => run(() => setAccountActive(a.id, !a.active), a.active ? "Account deactivated" : "Account activated")}
-              >
-                <Power className="size-4" />
-                {a.active ? "Deactivate" : "Activate"}
-              </Button>
-            </div>
           </div>
         </CollapsibleCard>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" disabled={isPending || !a.active} onClick={() => giveCode(a)}>
+              <KeyRound className="size-4" />
+              Give login code
+            </Button>
+            <Button
+              variant="outline"
+              disabled={isPending || a.devices === 0}
+              onClick={() => run(() => revokeAccountDevices(a.id), "Devices signed out")}
+            >
+              <LogOut className="size-4" />
+              Sign out devices
+            </Button>
+            <Button
+              variant="outline"
+              disabled={isPending}
+              onClick={() => run(() => setAccountActive(a.id, !a.active), a.active ? "Account deactivated" : "Account activated")}
+            >
+              <Power className="size-4" />
+              {a.active ? "Deactivate" : "Activate"}
+            </Button>
+          </div>
+        </div>
       ))}
 
       {data.accounts.length === 0 && !adding ? (
