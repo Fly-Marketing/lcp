@@ -140,6 +140,22 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
   return (
     <div className="grid gap-6 md:grid-cols-[minmax(0,380px)_1fr] md:items-start">
       <div className="flex flex-col gap-2 md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto">
+      <div className="flex items-start justify-between gap-2">
+          <div>
+            <h2 className="font-heading text-xl font-semibold">Properties</h2>
+            <p className="text-sm text-muted-foreground">Buildings, owners and units</p>
+          </div>
+          <Button
+            onClick={() => {
+              setSelectedId(null);
+              setAdding(true);
+            }}
+            disabled={adding}
+          >
+            <Plus className="size-4" />
+            Add property
+          </Button>
+        </div>
           <div className="flex flex-col gap-2">
             {data.buildings.map((b) => {
               const units = unitsOf(b.id);
@@ -175,22 +191,6 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
       </div>
 
       <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex items-start justify-between gap-2">
-          <div>
-            <h2 className="font-heading text-xl font-semibold">Properties</h2>
-            <p className="text-sm text-muted-foreground">Buildings, owners and units</p>
-          </div>
-          <Button
-            onClick={() => {
-              setSelectedId(null);
-              setAdding(true);
-            }}
-            disabled={adding}
-          >
-            <Plus className="size-4" />
-            Add property
-          </Button>
-        </div>
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
           <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
             {stats.map((st) => (
