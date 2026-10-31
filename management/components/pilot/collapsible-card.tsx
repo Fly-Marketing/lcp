@@ -14,7 +14,7 @@ export function CollapsibleCard({
   icon,
   title,
   badge,
-  highlight = false,
+  highlight = true,
   children,
 }: {
   id: string;
@@ -23,7 +23,7 @@ export function CollapsibleCard({
   icon?: React.ReactNode;
   title: React.ReactNode;
   badge?: React.ReactNode;
-  // highlight: a pink border while open.
+  // highlight (default on): a pink border while open.
   highlight?: boolean;
   children: React.ReactNode;
 }) {
