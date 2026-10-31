@@ -38,6 +38,15 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
   const unitsOf = (buildingId: string) => data.units.filter((u) => u.buildingId === buildingId);
   const flip = (setter: typeof setOpenBuildings, key: string) => setter((o) => ({ ...o, [key]: !o[key] }));
 
+  const selfManaged = data.buildings.filter((b) => b.mode === "self").length;
+  const unitsWithoutRate = data.units.filter((u) => u.rate === null).length;
+  const stats = [
+    { label: "Properties", value: data.buildings.length },
+    { label: "Units", value: data.units.length },
+    { label: "Self-managed", value: selfManaged },
+    { label: "Units without a rate", value: unitsWithoutRate },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-2">
@@ -69,6 +78,21 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
         </CollapsibleCard>
       ) : null}
 
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+        <div>
+          <h3 className="text-sm font-semibold">Overview</h3>
+          <p className="text-xs text-muted-foreground">Properties and units at a glance</p>
+        </div>
+        <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          {stats.map((st) => (
+            <div key={st.label} className="rounded-lg bg-background p-3">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{st.label}</dt>
+              <dd className="mt-1 text-xl font-semibold">{st.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="flex flex-col gap-4">
       {data.buildings.map((b) => {
         const units = unitsOf(b.id);
         return (
@@ -175,6 +199,8 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
       {data.buildings.length === 0 && !adding ? (
         <p className="text-sm text-muted-foreground">No properties yet. Add the first one.</p>
       ) : null}
+        </div>
+      </div>
     </div>
   );
 }
