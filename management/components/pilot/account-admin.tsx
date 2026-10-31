@@ -381,6 +381,22 @@ function PropertyAssignments({ account, data }: { account: AdminAccount; data: A
     });
   }
 
+  const rows = [
+    ...owned.map((b) => ({ key: `own-${b.id}`, name: b.name, role: "owner", remove: null as null | (() => void) })),
+    ...account.cleansAt.map((c) => ({
+      key: `clean-${c.buildingId}`,
+      name: c.buildingName,
+      role: `cleaner · ${c.role}`,
+      remove: account.staffId ? () => run(() => unassignCleaner(account.staffId!, c.buildingId), "Removed from property") : null,
+    })),
+    ...account.managerOf.map((m) => ({
+      key: `mgr-${m.buildingId}`,
+      name: m.buildingName,
+      role: ["manager", m.isPrimary ? "primary" : null, m.canEditPrice ? "can edit prices" : null].filter(Boolean).join(" · "),
+      remove: () => run(() => unassignManager(account.id, m.buildingId), "No longer managing this property"),
+    })),
+  ];
+
   const sectionLabel = "text-xs font-semibold uppercase tracking-wide text-muted-foreground";
 
   const count = account.cleansAt.length + account.managerOf.length;
@@ -411,55 +427,17 @@ function PropertyAssignments({ account, data }: { account: AdminAccount; data: A
         badge={<span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{count}</span>}
       >
         <div className="flex flex-col gap-4 rounded-xl border border-border bg-background p-4">
-      {owned.length > 0 ? (
-        <div className="flex flex-col gap-1">
-          <p className={sectionLabel}>Owns</p>
-          {owned.map((b) => (
-            <p key={`own-${b.id}`}>{b.name}</p>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="flex flex-col gap-2">
-        <p className={sectionLabel}>Cleans at</p>
-        {account.cleansAt.length === 0 ? <p className="text-muted-foreground">Not cleaning at any property.</p> : null}
-        {account.cleansAt.map((c) => (
-          <div key={`clean-${c.buildingId}`} className="flex items-center gap-2">
-            <span className="flex-1">
-              {c.buildingName} <span className="text-xs text-muted-foreground">· {c.role}</span>
-            </span>
-            <Button
-              size="xs"
-              variant="ghost"
-              disabled={isPending || !account.staffId}
-              onClick={() => account.staffId && run(() => unassignCleaner(account.staffId!, c.buildingId), "Removed from property")}
-            >
-              Remove
-            </Button>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <p className={sectionLabel}>Manages</p>
-        {account.managerOf.length === 0 ? <p className="text-muted-foreground">Not managing any property.</p> : null}
-        {account.managerOf.map((m) => (
-          <div key={`mgr-${m.buildingId}`} className="flex items-center gap-2">
-            <span className="flex-1">
-              {m.buildingName}
-              <span className="text-xs text-muted-foreground">
-                {m.isPrimary ? " · primary" : ""}
-                {m.canEditPrice ? " · can edit prices" : ""}
-              </span>
-            </span>
-            <Button
-              size="xs"
-              variant="ghost"
-              disabled={isPending}
-              onClick={() => run(() => unassignManager(account.id, m.buildingId), "No longer managing this property")}
-            >
-              Remove
-            </Button>
+      <div className="flex flex-col">
+        {rows.length === 0 ? <p className="py-2 text-muted-foreground">Not assigned to any property.</p> : null}
+        {rows.map((r) => (
+          <div key={r.key} className="flex items-center gap-3 border-b border-border py-2 last:border-b-0">
+            <span className="flex-1 text-sm">{r.name}</span>
+            <span className="text-xs text-muted-foreground">{r.role}</span>
+            {r.remove ? (
+              <Button size="xs" variant="ghost" disabled={isPending} onClick={r.remove}>
+                Remove
+              </Button>
+            ) : null}
           </div>
         ))}
       </div>
