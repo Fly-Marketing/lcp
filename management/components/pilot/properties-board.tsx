@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CalendarClock, CheckCircle2, ChevronRight, Flag, Plus, Sparkles } from "lucide-react";
+import { CalendarClock, CheckCircle2, ChevronDown, ChevronRight, Flag, Plus, Sparkles } from "lucide-react";
 
 import { AddJobSheet, type AddJobUnit } from "@/components/pilot/add-job-form";
 import { UnitPanel, type UnitView } from "@/components/pilot/unit-panel";
@@ -75,6 +75,8 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
   const [selected, setSelected] = useState<{ card: BoardCard; group: BoardGroup } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [addUnitId, setAddUnitId] = useState<string | undefined>();
+  // Each property folds its units. The title and status tags are the toggle.
+  const [folded, setFolded] = useState<Record<string, boolean>>({});
 
   const addUnits: AddJobUnit[] = groups
     .filter((g) => g.canAddJob)
@@ -109,15 +111,25 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
 
       {groups.map((g) => (
         <section key={g.buildingId} className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            aria-expanded={!folded[g.buildingId]}
+            onClick={() => setFolded((f) => ({ ...f, [g.buildingId]: !f[g.buildingId] }))}
+            className="flex w-full flex-wrap items-center gap-2 text-left"
+          >
             <h2 className="mr-2 font-heading text-lg font-semibold">{g.buildingName}</h2>
             {(["Ready", "Needs clean", "Flagged"] as UnitStatus[]).map((s) => (
               <span key={s} className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_STYLE[s].chip)}>
                 {g.counts[s]} {s.toLowerCase()}
               </span>
             ))}
-          </div>
+            <ChevronDown
+              aria-hidden
+              className={cn("ml-auto size-4 shrink-0 text-muted-foreground transition-transform", !folded[g.buildingId] && "rotate-180")}
+            />
+          </button>
 
+          {!folded[g.buildingId] ? (
           <div className="flex flex-col gap-2">
             {g.cards.map((c) => {
               const Icon = STATUS_STYLE[c.status].icon;
@@ -156,6 +168,7 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
               <p className="text-sm text-muted-foreground">No units in this property yet.</p>
             ) : null}
           </div>
+          ) : null}
         </section>
       ))}
     </div>
