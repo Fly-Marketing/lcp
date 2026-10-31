@@ -359,7 +359,7 @@ function AccountForm({
 
 // Properties a person owns, cleans at and manages. Cleaning and managing can be added and removed here.
 function PropertyAssignments({ account, data }: { account: AdminAccount; data: AdminData }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [buildingId, setBuildingId] = useState("");
   const [canEditPrice, setCanEditPrice] = useState(false);
@@ -386,14 +386,31 @@ function PropertyAssignments({ account, data }: { account: AdminAccount; data: A
   const count = account.cleansAt.length + account.managerOf.length;
 
   return (
-    <CollapsibleCard
-      id={`properties-${account.id}`}
-      open={open}
-      onToggle={() => setOpen((o) => !o)}
-      title={<span className="font-medium">Properties</span>}
-      badge={<span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{count}</span>}
-    >
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+      <div>
+        <h3 className="text-sm font-semibold">Properties</h3>
+        <p className="text-xs text-muted-foreground">What this person owns, cleans and manages</p>
+      </div>
+      <dl className="grid grid-cols-3 gap-3 text-sm">
+        {[
+          { label: "Owns", value: owned.length },
+          { label: "Cleans at", value: account.cleansAt.length },
+          { label: "Manages", value: account.managerOf.length },
+        ].map((st) => (
+          <div key={st.label} className="rounded-lg bg-background p-3">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{st.label}</dt>
+            <dd className="mt-1 text-xl font-semibold">{st.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <CollapsibleCard
+        id={`assignments-${account.id}`}
+        open={open}
+        onToggle={() => setOpen((o) => !o)}
+        title={<span className="font-medium">Assigned properties</span>}
+        badge={<span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{count}</span>}
+      >
+        <div className="flex flex-col gap-4 rounded-xl border border-border bg-background p-4">
       {owned.length > 0 ? (
         <div className="flex flex-col gap-1">
           <p className={sectionLabel}>Owns</p>
@@ -488,7 +505,8 @@ function PropertyAssignments({ account, data }: { account: AdminAccount; data: A
         ) : null}
       </div>
     </div>
-    </CollapsibleCard>
+      </CollapsibleCard>
+    </div>
   );
 }
 
