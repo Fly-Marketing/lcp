@@ -5,6 +5,7 @@ import { KeyRound, Loader2, LogOut, Pencil, Plus, Power, Trash2 } from "lucide-r
 import { toast } from "sonner";
 
 import { CollapsibleCard } from "@/components/pilot/collapsible-card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -364,6 +365,7 @@ function PropertyAssignments({ account, data }: { account: AdminAccount; data: A
   const [buildingId, setBuildingId] = useState("");
   const [canEditPrice, setCanEditPrice] = useState(false);
   const [isPrimary, setIsPrimary] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   const owned = data.buildings.filter((b) => account.customerId !== null && b.customerId === account.customerId);
   const linkable = data.buildings.filter(
@@ -378,26 +380,34 @@ function PropertyAssignments({ account, data }: { account: AdminAccount; data: A
       if (!r.success) return void toast.error(r.message ?? "Something went wrong");
       toast.success(ok);
       setBuildingId("");
+      setAddOpen(false);
     });
   }
 
-  const rows = [
-    ...owned.map((b) => ({ key: `own-${b.id}`, name: b.name, role: "owner", remove: null as null | (() => void) })),
+  type Tag = { label: string; tone: "role" | "detail" };
+  const rows: { key: string; name: string; tags: Tag[]; remove: null | (() => void) }[] = [
+    ...owned.map((b) => ({ key: `own-${b.id}`, name: b.name, tags: [{ label: "Owner", tone: "role" as const }], remove: null })),
     ...account.cleansAt.map((c) => ({
       key: `clean-${c.buildingId}`,
       name: c.buildingName,
-      role: `cleaner · ${c.role}`,
+      tags: [
+        { label: "Cleaner", tone: "role" as const },
+        { label: c.role === "backup" ? "Backup" : "Primary", tone: "detail" as const },
+      ],
       remove: account.staffId ? () => run(() => unassignCleaner(account.staffId!, c.buildingId), "Removed from property") : null,
     })),
     ...account.managerOf.map((m) => ({
       key: `mgr-${m.buildingId}`,
       name: m.buildingName,
-      role: ["manager", m.isPrimary ? "primary" : null, m.canEditPrice ? "can edit prices" : null].filter(Boolean).join(" · "),
+      tags: [
+        { label: "Manager", tone: "role" as const },
+        ...(m.isPrimary ? [{ label: "Primary", tone: "detail" as const }] : []),
+        ...(m.canEditPrice ? [{ label: "Can edit prices", tone: "detail" as const }] : []),
+      ],
       remove: () => run(() => unassignManager(account.id, m.buildingId), "No longer managing this property"),
     })),
   ];
 
-  const sectionLabel = "text-xs font-semibold uppercase tracking-wide text-muted-foreground";
 
   const count = account.cleansAt.length + account.managerOf.length;
 
@@ -432,7 +442,20 @@ function PropertyAssignments({ account, data }: { account: AdminAccount; data: A
         {rows.map((r) => (
           <div key={r.key} className="flex items-center gap-3 border-b border-border py-2 last:border-b-0">
             <span className="flex-1 text-sm">{r.name}</span>
-            <span className="text-xs text-muted-foreground">{r.role}</span>
+            <div className="flex flex-wrap justify-end gap-1">
+              {r.tags.map((t) => (
+                <span
+                  key={t.label}
+                  className={
+                    t.tone === "role"
+                      ? "rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"
+                      : "rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                  }
+                >
+                  {t.label}
+                </span>
+              ))}
+            </div>
             {r.remove ? (
               <Button size="xs" variant="ghost" disabled={isPending} onClick={r.remove}>
                 Remove
@@ -442,48 +465,61 @@ function PropertyAssignments({ account, data }: { account: AdminAccount; data: A
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-border pt-4">
-        <p className={sectionLabel}>Add to a property</p>
-        <select className={selectCls} aria-label="Property" value={buildingId} onChange={(e) => setBuildingId(e.target.value)}>
-          <option value="">Choose a property</option>
-          {linkable.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
-        </select>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={canEditPrice} onChange={(e) => setCanEditPrice(e.target.checked)} />
-          Can edit job prices (manager)
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={isPrimary} onChange={(e) => setIsPrimary(e.target.checked)} />
-          Primary manager (manager)
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {account.staffId ? (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={isPending || !buildingId}
-              onClick={() => run(() => assignCleaner(account.staffId!, buildingId, "primary"), "Assigned as cleaner")}
-            >
-              Assign as cleaner
-            </Button>
-          ) : null}
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={isPending || !buildingId}
-            onClick={() => run(() => assignManager(account.id, buildingId, canEditPrice, isPrimary), "Assigned as manager")}
-          >
-            Assign as manager
-          </Button>
-        </div>
-        {!account.staffId ? (
-          <p className="text-xs text-muted-foreground">Cleaning needs a cleaner record. Create the person as a cleaner to assign them.</p>
-        ) : null}
+      <div className="flex justify-end">
+        <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
+          <Plus className="size-4" />
+          Add to a property
+        </Button>
       </div>
-    </div>
+        </div>
       </CollapsibleCard>
+
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add {account.name || formatPhone(account.phone)} to a property</DialogTitle>
+            <DialogDescription>Choose a property and how they work there.</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <select className={selectCls} aria-label="Property" value={buildingId} onChange={(e) => setBuildingId(e.target.value)}>
+              <option value="">Choose a property</option>
+              {linkable.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={canEditPrice} onChange={(e) => setCanEditPrice(e.target.checked)} />
+              Can edit job prices (manager)
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={isPrimary} onChange={(e) => setIsPrimary(e.target.checked)} />
+              Primary manager (manager)
+            </label>
+            <div className="flex flex-wrap justify-end gap-2">
+              {account.staffId ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isPending || !buildingId}
+                  onClick={() => run(() => assignCleaner(account.staffId!, buildingId, "primary"), "Assigned as cleaner")}
+                >
+                  Assign as cleaner
+                </Button>
+              ) : null}
+              <Button
+                size="sm"
+                disabled={isPending || !buildingId}
+                onClick={() => run(() => assignManager(account.id, buildingId, canEditPrice, isPrimary), "Assigned as manager")}
+              >
+                Assign as manager
+              </Button>
+            </div>
+            {!account.staffId ? (
+              <p className="text-xs text-muted-foreground">Cleaning needs a cleaner record. Create the person as a cleaner to assign them.</p>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
