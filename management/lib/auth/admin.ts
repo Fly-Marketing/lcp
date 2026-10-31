@@ -1,5 +1,6 @@
 import "server-only";
 import { getServiceClient } from "@/lib/pilot/supabase";
+import { describeAgent } from "@/lib/auth/user-agent";
 import type { ChecklistItem } from "@/lib/pilot/types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -16,6 +17,7 @@ export interface AdminAccount {
   isTest: boolean;
   active: boolean;
   devices: number;
+  deviceList: { id: string; label: string; lastSeen: string }[];
   managerOf: { buildingId: string; buildingName: string; canEditPrice: boolean; isPrimary: boolean }[];
   cleansAt: { buildingId: string; buildingName: string; role: string }[];
 }
@@ -59,7 +61,7 @@ export async function loadAdminData(): Promise<AdminData> {
       .order("unit_name"),
     db
       .from("trusted_devices")
-      .select("account_id")
+      .select("id, account_id, user_agent, last_seen_at")
       .is("revoked_at", null)
       .gt("hard_expires_at", new Date().toISOString()),
     db
@@ -91,6 +93,13 @@ export async function loadAdminData(): Promise<AdminData> {
       isTest: a.is_test === true,
       active: a.active,
       devices: deviceCount.get(a.id) ?? 0,
+      deviceList: (devices.data ?? [])
+        .filter((d: any) => d.account_id === a.id)
+        .map((d: any) => ({
+          id: d.id,
+          label: describeAgent(d.user_agent ?? null),
+          lastSeen: new Date(d.last_seen_at).toLocaleDateString("en-CA", { month: "short", day: "numeric" }),
+        })),
       managerOf: (managers.data ?? [])
         .filter((m: any) => m.account_id === a.id)
         .map((m: any) => ({

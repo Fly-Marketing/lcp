@@ -5,18 +5,12 @@ import { PageFrame } from "@/components/pilot/page-frame";
 import { AccountPanel, type DeviceView } from "@/components/pilot/account-panel";
 import { getAccount } from "@/lib/auth/accounts";
 import { listDevices } from "@/lib/auth/devices";
+import { describeAgent } from "@/lib/auth/user-agent";
 import { formatPhone } from "@/lib/auth/phone";
 import { requireSession } from "@/lib/auth/session";
 import { usesFakeData } from "@/lib/pilot/mode";
 
 export const dynamic = "force-dynamic";
-
-function describeAgent(ua: string | null): string {
-  if (!ua) return "Unknown device";
-  const os = /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Android/.test(ua) ? "Android" : /Mac OS X/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : /Linux/.test(ua) ? "Linux" : "Device";
-  const browser = /Edg\//.test(ua) ? "Edge" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : /Firefox\//.test(ua) ? "Firefox" : "Browser";
-  return `${browser} on ${os}`;
-}
 
 function roleLabel(roles: string[]): string {
   return roles.length ? roles.map((r) => r[0].toUpperCase() + r.slice(1)).join(" · ") : "Member";

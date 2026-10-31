@@ -144,6 +144,21 @@ export async function issueLoginCode(
   return { success: true, code, phone: account.phone_e164 };
 }
 
+// Signs out one device. Only that device; the person's other devices stay signed in.
+export async function revokeOneDevice(accountId: string, deviceId: string): Promise<Result> {
+  const admin = await requireAdmin();
+  if (!admin) return DENIED;
+  const { error } = await getServiceClient()
+    .from("trusted_devices")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("id", deviceId)
+    .eq("account_id", accountId)
+    .is("revoked_at", null);
+  if (error) return { success: false, message: "Could not sign out that device" };
+  await recordEvent("device_revoked", { accountId, actorAccountId: admin.accountId });
+  return done();
+}
+
 export async function revokeAccountDevices(accountId: string): Promise<Result> {
   const admin = await requireAdmin();
   if (!admin) return DENIED;

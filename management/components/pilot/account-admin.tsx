@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { KeyRound, Loader2, LogOut, Pencil, Plus, Power } from "lucide-react";
+import { KeyRound, Loader2, LogOut, Pencil, Plus, Power, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CollapsibleCard } from "@/components/pilot/collapsible-card";
@@ -15,6 +15,7 @@ import {
   createAccount,
   issueLoginCode,
   revokeAccountDevices,
+  revokeOneDevice,
   setAccountActive,
   unassignCleaner,
   unassignManager,
@@ -165,6 +166,30 @@ export function AccountAdmin({ data }: { data: AdminData }) {
                 </div>
               </>
             )}
+
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+              <h3 className="text-sm font-semibold">Signed-in devices</h3>
+              {a.deviceList.length === 0 ? <p className="text-muted-foreground">No devices are signed in.</p> : null}
+              {a.deviceList.map((d) => (
+                <div key={d.id} className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <p className="text-sm">{d.label}</p>
+                    <p className="text-xs text-muted-foreground">Last used {d.lastSeen}</p>
+                  </div>
+                  {editingId === a.id ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`Remove ${d.label}`}
+                      disabled={isPending}
+                      onClick={() => run(() => revokeOneDevice(a.id, d.id), "Device signed out")}
+                    >
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
 
             {issued?.accountId === a.id ? (
               <div role="status" className="rounded-xl border border-green-300 bg-green-50 p-4 text-sm text-green-900">
