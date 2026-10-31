@@ -5,7 +5,6 @@ import { ChevronRight, KeyRound, Loader2, LogOut, Pencil, Plus, Power, Trash2 } 
 import { toast } from "sonner";
 
 import { CollapsibleCard } from "@/components/pilot/collapsible-card";
-import { MasterDetail } from "@/components/pilot/master-detail";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +68,15 @@ export function AccountAdmin({ data }: { data: AdminData }) {
   }
 
   const selected = data.accounts.find((a) => a.id === selectedId) ?? null;
+
+  const showDetail = adding || selected !== null;
+  const stats = [
+    { label: "People", value: data.accounts.length },
+    { label: "Cleaners", value: data.accounts.filter((a) => a.staffId).length },
+    { label: "Owners", value: data.accounts.filter((a) => a.customerId).length },
+    { label: "Managers", value: data.accounts.filter((a) => a.managerOf.length > 0).length },
+  ];
+
 
   // One person's card: the actions, About (with the devices), any sign-in code, and Properties.
   const renderPerson = (a: AdminAccount) => (
@@ -146,7 +154,8 @@ export function AccountAdmin({ data }: { data: AdminData }) {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={cn("grid gap-6 md:items-start", showDetail && "md:grid-cols-[minmax(0,380px)_1fr]")}>
+      <div className={cn("flex min-w-0 flex-col gap-4", showDetail && "md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto")}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <h2 className="font-heading text-xl font-semibold">People</h2>
@@ -163,9 +172,17 @@ export function AccountAdmin({ data }: { data: AdminData }) {
           Add person
         </Button>
       </div>
+        <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+          <dl className={cn("grid grid-cols-2 gap-3 text-sm", !showDetail && "sm:grid-cols-4")}>
+            {stats.map((st) => (
+              <div key={st.label} className="rounded-lg bg-background p-3">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{st.label}</dt>
+                <dd className="mt-1 text-xl font-semibold">{st.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
 
-      <MasterDetail
-        list={
           <div className="flex flex-col gap-2">
             {data.accounts.map((a) => (
               <button
@@ -198,9 +215,12 @@ export function AccountAdmin({ data }: { data: AdminData }) {
             ))}
             {data.accounts.length === 0 ? <p className="text-sm text-muted-foreground">No people yet. Add the first one.</p> : null}
           </div>
-        }
-        detail={
-          adding ? (
+      </div>
+
+      {showDetail ? (
+        <div className="flex min-w-0 flex-col gap-4">
+          <div className="w-full">
+          {adding ? (
             <AccountForm
               data={data}
               onCancel={() => setAdding(false)}
@@ -214,9 +234,10 @@ export function AccountAdmin({ data }: { data: AdminData }) {
               <h2 className="font-heading text-xl font-semibold">{selected.name || formatPhone(selected.phone)}</h2>
               {renderPerson(selected)}
             </div>
-          ) : undefined
-        }
-      />
+          ) : undefined}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
