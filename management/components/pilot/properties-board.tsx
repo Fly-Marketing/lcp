@@ -75,8 +75,8 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
   const [selected, setSelected] = useState<{ card: BoardCard; group: BoardGroup } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [addUnitId, setAddUnitId] = useState<string | undefined>();
-  // Each property folds its units. The title and status tags are the toggle.
-  const [folded, setFolded] = useState<Record<string, boolean>>({});
+  // Each property opens to show its units. Closed by default; the title and status tags are the toggle.
+  const [opened, setOpened] = useState<Record<string, boolean>>({});
 
   const addUnits: AddJobUnit[] = groups
     .filter((g) => g.canAddJob)
@@ -113,11 +113,11 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
         <section key={g.buildingId} className="flex flex-col gap-3">
           <button
             type="button"
-            aria-expanded={!folded[g.buildingId]}
-            onClick={() => setFolded((f) => ({ ...f, [g.buildingId]: !f[g.buildingId] }))}
+            aria-expanded={!!opened[g.buildingId]}
+            onClick={() => setOpened((o) => ({ ...o, [g.buildingId]: !o[g.buildingId] }))}
             className={cn(
               "flex w-full flex-wrap items-center gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors",
-              folded[g.buildingId] ? "border-border bg-card hover:bg-muted/40" : "border-[#e88684] bg-[#e88684]/10"
+              opened[g.buildingId] ? "border-pink-500 bg-pink-50" : "border-border bg-card hover:bg-muted/40"
             )}
           >
             <h2 className="mr-2 w-full font-heading text-lg font-semibold sm:w-auto">{g.buildingName}</h2>
@@ -130,12 +130,12 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
               aria-hidden
               className={cn(
                 "ml-auto size-4 shrink-0 transition-transform",
-                folded[g.buildingId] ? "text-muted-foreground" : "rotate-180 text-[#e88684]"
+                opened[g.buildingId] ? "rotate-180 text-pink-600" : "text-muted-foreground"
               )}
             />
           </button>
 
-          {!folded[g.buildingId] ? (
+          {opened[g.buildingId] ? (
           <div className="flex flex-col gap-2">
             {g.cards.map((c) => {
               const Icon = STATUS_STYLE[c.status].icon;
