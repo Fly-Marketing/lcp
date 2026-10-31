@@ -115,7 +115,10 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
             type="button"
             aria-expanded={!folded[g.buildingId]}
             onClick={() => setFolded((f) => ({ ...f, [g.buildingId]: !f[g.buildingId] }))}
-            className="flex w-full flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
+            className={cn(
+              "flex w-full flex-wrap items-center gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors",
+              folded[g.buildingId] ? "border-border bg-card hover:bg-muted/40" : "border-[#e88684] bg-[#e88684]/10"
+            )}
           >
             <h2 className="mr-2 font-heading text-lg font-semibold">{g.buildingName}</h2>
             {(["Ready", "Needs clean", "Flagged"] as UnitStatus[]).map((s) => (
@@ -125,7 +128,10 @@ export function PropertiesBoard({ groups, today }: { groups: BoardGroup[]; today
             ))}
             <ChevronDown
               aria-hidden
-              className={cn("ml-auto size-4 shrink-0 text-muted-foreground transition-transform", !folded[g.buildingId] && "rotate-180")}
+              className={cn(
+                "ml-auto size-4 shrink-0 transition-transform",
+                folded[g.buildingId] ? "text-muted-foreground" : "rotate-180 text-[#e88684]"
+              )}
             />
           </button>
 
