@@ -25,7 +25,7 @@ function roleLabel(roles: string[]): string {
 // My account stands on its own, opened from the header. Team and admin tools now live under Management.
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const { tab } = await searchParams;
-  if (tab === "team" || tab === "accounts" || tab === "properties") redirect(`/pilot/management?tab=${tab}`);
+  if (tab === "team" || tab === "accounts" || tab === "properties") redirect(`/pilot/management?tab=${tab === "properties" ? "properties" : "people"}`);
 
   const session = await requireSession("/pilot/account");
 

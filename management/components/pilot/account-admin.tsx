@@ -9,11 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  assignCleaner,
+  assignManager,
   changeAccountPhone,
   createAccount,
   issueLoginCode,
   revokeAccountDevices,
   setAccountActive,
+  unassignCleaner,
+  unassignManager,
   updateAccountName,
 } from "@/app/pilot/admin/actions";
 import { formatPhone } from "@/lib/auth/phone";
@@ -42,7 +46,6 @@ export function AccountAdmin({ data }: { data: AdminData }) {
   const [issued, setIssued] = useState<{ accountId: string; code: string } | null>(null);
 
   const selected = data.accounts.find((a) => a.id === selectedId) ?? null;
-  const ownedBy = (a: AdminAccount) => data.buildings.filter((b) => a.customerId && b.customerId === a.customerId);
 
   function select(id: string | null) {
     setSelectedId(id);
@@ -181,31 +184,7 @@ export function AccountAdmin({ data }: { data: AdminData }) {
         </dl>
         )}
 
-        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-sm">
-          <h3 className="text-sm font-semibold">Properties</h3>
-          {ownedBy(selected).length === 0 && selected.cleansAt.length === 0 && selected.managerOf.length === 0 ? (
-            <p className="text-muted-foreground">Not linked to any property yet.</p>
-          ) : null}
-          {ownedBy(selected).map((b) => (
-            <p key={`own-${b.id}`}><span className="text-muted-foreground">Owns </span>{b.name}</p>
-          ))}
-          {selected.cleansAt.map((c) => (
-            <p key={`clean-${c.buildingId}`}>
-              <span className="text-muted-foreground">Cleans at </span>
-              {c.buildingName} <span className="text-xs text-muted-foreground">· {c.role}</span>
-            </p>
-          ))}
-          {selected.managerOf.map((m) => (
-            <p key={`mgr-${m.buildingId}`}>
-              <span className="text-muted-foreground">Manages </span>
-              {m.buildingName}
-              <span className="text-xs text-muted-foreground">
-                {m.isPrimary ? " · primary" : ""}
-                {m.canEditPrice ? " · can edit prices" : ""}
-              </span>
-            </p>
-          ))}
-        </div>
+        <PropertyAssignments account={selected} data={data} />
 
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" disabled={isPending || !selected.active} onClick={() => giveCode(selected)}>
@@ -431,6 +410,132 @@ function AccountForm({
 
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">{fields}</div>
       {buttons}
+    </div>
+  );
+}
+
+// Properties a person owns, cleans at and manages. Cleaning and managing can be added and removed here.
+function PropertyAssignments({ account, data }: { account: AdminAccount; data: AdminData }) {
+  const [isPending, startTransition] = useTransition();
+  const [buildingId, setBuildingId] = useState("");
+  const [canEditPrice, setCanEditPrice] = useState(false);
+  const [isPrimary, setIsPrimary] = useState(false);
+
+  const owned = data.buildings.filter((b) => account.customerId !== null && b.customerId === account.customerId);
+  const linkable = data.buildings.filter(
+    (b) =>
+      !account.cleansAt.some((c) => c.buildingId === b.id) &&
+      !account.managerOf.some((m) => m.buildingId === b.id)
+  );
+
+  function run(fn: () => Promise<{ success: boolean; message?: string }>, ok: string) {
+    startTransition(async () => {
+      const r = await fn();
+      if (!r.success) return void toast.error(r.message ?? "Something went wrong");
+      toast.success(ok);
+      setBuildingId("");
+    });
+  }
+
+  const sectionLabel = "text-xs font-semibold uppercase tracking-wide text-muted-foreground";
+
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 text-sm">
+      <h3 className="text-sm font-semibold">Properties</h3>
+
+      {owned.length > 0 ? (
+        <div className="flex flex-col gap-1">
+          <p className={sectionLabel}>Owns</p>
+          {owned.map((b) => (
+            <p key={`own-${b.id}`}>{b.name}</p>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-2">
+        <p className={sectionLabel}>Cleans at</p>
+        {account.cleansAt.length === 0 ? <p className="text-muted-foreground">Not cleaning at any property.</p> : null}
+        {account.cleansAt.map((c) => (
+          <div key={`clean-${c.buildingId}`} className="flex items-center gap-2">
+            <span className="flex-1">
+              {c.buildingName} <span className="text-xs text-muted-foreground">· {c.role}</span>
+            </span>
+            <Button
+              size="xs"
+              variant="ghost"
+              disabled={isPending || !account.staffId}
+              onClick={() => account.staffId && run(() => unassignCleaner(account.staffId!, c.buildingId), "Removed from property")}
+            >
+              Remove
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <p className={sectionLabel}>Manages</p>
+        {account.managerOf.length === 0 ? <p className="text-muted-foreground">Not managing any property.</p> : null}
+        {account.managerOf.map((m) => (
+          <div key={`mgr-${m.buildingId}`} className="flex items-center gap-2">
+            <span className="flex-1">
+              {m.buildingName}
+              <span className="text-xs text-muted-foreground">
+                {m.isPrimary ? " · primary" : ""}
+                {m.canEditPrice ? " · can edit prices" : ""}
+              </span>
+            </span>
+            <Button
+              size="xs"
+              variant="ghost"
+              disabled={isPending}
+              onClick={() => run(() => unassignManager(account.id, m.buildingId), "No longer managing this property")}
+            >
+              Remove
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-3 border-t border-border pt-4">
+        <p className={sectionLabel}>Add to a property</p>
+        <select className={selectCls} aria-label="Property" value={buildingId} onChange={(e) => setBuildingId(e.target.value)}>
+          <option value="">Choose a property</option>
+          {linkable.map((b) => (
+            <option key={b.id} value={b.id}>{b.name}</option>
+          ))}
+        </select>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={canEditPrice} onChange={(e) => setCanEditPrice(e.target.checked)} />
+          Can edit job prices (manager)
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={isPrimary} onChange={(e) => setIsPrimary(e.target.checked)} />
+          Primary manager (manager)
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {account.staffId ? (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isPending || !buildingId}
+              onClick={() => run(() => assignCleaner(account.staffId!, buildingId, "primary"), "Assigned as cleaner")}
+            >
+              Assign as cleaner
+            </Button>
+          ) : null}
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isPending || !buildingId}
+            onClick={() => run(() => assignManager(account.id, buildingId, canEditPrice, isPrimary), "Assigned as manager")}
+          >
+            Assign as manager
+          </Button>
+        </div>
+        {!account.staffId ? (
+          <p className="text-xs text-muted-foreground">Cleaning needs a cleaner record. Create the person as a cleaner to assign them.</p>
+        ) : null}
+      </div>
     </div>
   );
 }

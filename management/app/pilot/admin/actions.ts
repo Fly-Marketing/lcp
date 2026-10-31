@@ -17,7 +17,7 @@ type Created = { success: true; id: string } | Failure;
 const DENIED: Failure = { success: false, message: "Admins only" };
 
 async function requireAdmin() {
-  const session = await requireSession("/pilot/management?tab=accounts");
+  const session = await requireSession("/pilot/management?tab=people");
   if (!session.isAdmin || usesFakeData()) return null;
   return session;
 }
@@ -258,6 +258,84 @@ export async function updateAccountName(accountId: string, name: string): Promis
   if (!clean) return { success: false, message: "Enter a name" };
   const { error } = await getServiceClient().from("accounts").update({ display_name: clean }).eq("id", accountId);
   if (error) return { success: false, message: "Could not save the name" };
+  return done();
+}
+
+// Property assignments, managed from a person's card on the People tab.
+
+export async function assignCleaner(staffId: string, buildingId: string, role: "primary" | "backup"): Promise<Result> {
+  const admin = await requireAdmin();
+  if (!admin) return DENIED;
+  const supabase = getServiceClient();
+  const { error } = await supabase
+    .from("building_cleaners")
+    .insert({ building_id: buildingId, staff_id: staffId, role });
+  if (!error) return done();
+  if (error.code !== "23505") return { success: false, message: "Could not assign the cleaner" };
+  // Already linked before (and maybe removed): reinstate the link.
+  const { error: updateError } = await supabase
+    .from("building_cleaners")
+    .update({ revoked_at: null, role })
+    .eq("building_id", buildingId)
+    .eq("staff_id", staffId);
+  if (updateError) return { success: false, message: "Could not assign the cleaner" };
+  return done();
+}
+
+export async function unassignCleaner(staffId: string, buildingId: string): Promise<Result> {
+  const admin = await requireAdmin();
+  if (!admin) return DENIED;
+  const { error } = await getServiceClient()
+    .from("building_cleaners")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("building_id", buildingId)
+    .eq("staff_id", staffId);
+  if (error) return { success: false, message: "Could not remove the cleaner" };
+  return done();
+}
+
+export async function assignManager(
+  accountId: string,
+  buildingId: string,
+  canEditPrice: boolean,
+  isPrimary: boolean
+): Promise<Result> {
+  const admin = await requireAdmin();
+  if (!admin) return DENIED;
+  const supabase = getServiceClient();
+  const { error } = await supabase.from("role_assignments").insert({
+    account_id: accountId,
+    role: "manager",
+    building_id: buildingId,
+    can_edit_price: canEditPrice,
+    is_primary: isPrimary,
+  });
+  if (!error) return done();
+  if (error.code === "23505" && error.message.includes("one_primary_manager_per_building")) {
+    return { success: false, message: "That property already has a primary manager" };
+  }
+  if (error.code !== "23505") return { success: false, message: "Could not assign the manager" };
+  // Already a manager there (and maybe removed): reinstate with the new settings.
+  const { error: updateError } = await supabase
+    .from("role_assignments")
+    .update({ revoked_at: null, can_edit_price: canEditPrice, is_primary: isPrimary })
+    .eq("account_id", accountId)
+    .eq("role", "manager")
+    .eq("building_id", buildingId);
+  if (updateError) return { success: false, message: "That property already has a primary manager" };
+  return done();
+}
+
+export async function unassignManager(accountId: string, buildingId: string): Promise<Result> {
+  const admin = await requireAdmin();
+  if (!admin) return DENIED;
+  const { error } = await getServiceClient()
+    .from("role_assignments")
+    .update({ revoked_at: new Date().toISOString(), is_primary: false })
+    .eq("account_id", accountId)
+    .eq("role", "manager")
+    .eq("building_id", buildingId);
+  if (error) return { success: false, message: "Could not remove the manager" };
   return done();
 }
 

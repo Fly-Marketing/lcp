@@ -15,13 +15,14 @@ import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-type Tab = "team" | "accounts" | "properties";
+type Tab = "people" | "properties";
 
-// Team: owners, managers and admins. Accounts and Properties: admins only.
+// People: everyone who works with the properties. Admins see every account; owners and managers
+// see their team. Properties: admins only.
 function tabsFor(session: Session): { key: Tab; label: string }[] {
   const tabs: { key: Tab; label: string }[] = [];
-  if (session.isAdmin || hasRole(session, "owner") || hasRole(session, "manager")) tabs.push({ key: "team", label: "Team" });
-  if (session.isAdmin) tabs.push({ key: "accounts", label: "Accounts" }, { key: "properties", label: "Properties" });
+  if (session.isAdmin || hasRole(session, "owner") || hasRole(session, "manager")) tabs.push({ key: "people", label: "People" });
+  if (session.isAdmin) tabs.push({ key: "properties", label: "Properties" });
   return tabs;
 }
 
@@ -37,7 +38,7 @@ export default async function ManagementPage({ searchParams }: { searchParams: P
       <div className="flex flex-col gap-6">
         <div>
           <h1 className="font-heading text-2xl font-semibold">Management</h1>
-          <p className="text-sm text-muted-foreground">Team, accounts and properties</p>
+          <p className="text-sm text-muted-foreground">People and properties</p>
         </div>
 
         {tabs.length > 1 ? (
@@ -58,12 +59,26 @@ export default async function ManagementPage({ searchParams }: { searchParams: P
           </nav>
         ) : null}
 
-        {active === "team" ? <TeamTab session={session} /> : null}
-        {active === "accounts" ? <AdminTab view="accounts" /> : null}
-        {active === "properties" ? <AdminTab view="properties" /> : null}
+        {active === "people" ? <PeopleTab session={session} /> : null}
+        {active === "properties" ? <PropertiesTab /> : null}
       </div>
     </PageFrame>
   );
+}
+
+async function PeopleTab({ session }: { session: Session }) {
+  if (!session.isAdmin) return <TeamTab session={session} />;
+  if (usesFakeData()) {
+    return <p className="text-sm text-muted-foreground">The admin tools need the real database (PILOT_USE_FAKE_DATA=false).</p>;
+  }
+  return <AccountAdmin data={await loadAdminData()} />;
+}
+
+async function PropertiesTab() {
+  if (usesFakeData()) {
+    return <p className="text-sm text-muted-foreground">The admin tools need the real database (PILOT_USE_FAKE_DATA=false).</p>;
+  }
+  return <PropertyAdmin data={await loadAdminData()} />;
 }
 
 async function TeamTab({ session }: { session: Session }) {
@@ -78,12 +93,4 @@ async function TeamTab({ session }: { session: Session }) {
   }));
 
   return <TeamPanel groups={groups} />;
-}
-
-async function AdminTab({ view }: { view: "accounts" | "properties" }) {
-  if (usesFakeData()) {
-    return <p className="text-sm text-muted-foreground">The admin tools need the real database (PILOT_USE_FAKE_DATA=false).</p>;
-  }
-  const data = await loadAdminData();
-  return view === "accounts" ? <AccountAdmin data={data} /> : <PropertyAdmin data={data} />;
 }
