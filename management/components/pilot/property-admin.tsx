@@ -137,9 +137,11 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
     );
   };
 
+  const showDetail = adding || selected !== null;
+
   return (
-    <div className="grid gap-6 md:grid-cols-[minmax(0,380px)_1fr] md:items-start">
-      <div className="flex flex-col gap-2 md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto">
+    <div className={cn("grid gap-6 md:items-start", showDetail && "md:grid-cols-[minmax(0,380px)_1fr]")}>
+      <div className={cn("flex min-w-0 flex-col gap-4", showDetail && "md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto")}>
       <div className="flex items-start justify-between gap-2">
           <div>
             <h2 className="font-heading text-xl font-semibold">Properties</h2>
@@ -157,7 +159,7 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
           </Button>
         </div>
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
-          <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          <dl className={cn("grid grid-cols-2 gap-3 text-sm", !showDetail && "sm:grid-cols-4")}>
             {stats.map((st) => (
               <div key={st.label} className="rounded-lg bg-background p-3">
                 <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{st.label}</dt>
@@ -202,8 +204,8 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
           </div>
       </div>
 
+      {showDetail ? (
       <div className="flex min-w-0 flex-col gap-4">
-
         <div className="w-full">
           {adding ? (
             <PropertyForm
@@ -222,6 +224,7 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
           ) : undefined}
         </div>
       </div>
+      ) : null}
     </div>
   );
 }
