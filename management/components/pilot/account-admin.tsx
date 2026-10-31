@@ -154,8 +154,7 @@ export function AccountAdmin({ data }: { data: AdminData }) {
   );
 
   return (
-    <div className={cn("grid gap-6 md:items-start", showDetail && "md:grid-cols-[minmax(0,380px)_1fr]")}>
-      <div className={cn("flex min-w-0 flex-col gap-4", showDetail && "md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto")}>
+    <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h2 className="font-heading text-xl font-semibold">People</h2>
@@ -172,6 +171,8 @@ export function AccountAdmin({ data }: { data: AdminData }) {
           Add person
         </Button>
       </div>
+      <div className={cn("grid gap-6 md:items-start", showDetail && "md:grid-cols-[minmax(0,380px)_1fr]")}>
+      <div className={cn("flex min-w-0 flex-col gap-4", showDetail && "md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto")}>
         <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
           <dl className={cn("grid grid-cols-2 gap-3 text-sm", !showDetail && "sm:grid-cols-4")}>
             {stats.map((st) => (
@@ -238,6 +239,7 @@ export function AccountAdmin({ data }: { data: AdminData }) {
           </div>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }

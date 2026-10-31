@@ -140,35 +140,36 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
   const showDetail = adding || selected !== null;
 
   return (
-    <div className={cn("grid gap-6 md:items-start", showDetail && "md:grid-cols-[minmax(0,380px)_1fr]")}>
-      <div className={cn("flex min-w-0 flex-col gap-4", showDetail && "md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto")}>
+    <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-2">
-          <div>
-            <h2 className="font-heading text-xl font-semibold">Properties</h2>
-            <p className="text-sm text-muted-foreground">Buildings, owners and units</p>
-          </div>
-          <Button
-            onClick={() => {
-              setSelectedId(null);
-              setAdding(true);
-            }}
-            disabled={adding}
-          >
-            <Plus className="size-4" />
-            Add property
-          </Button>
+        <div>
+          <h2 className="font-heading text-xl font-semibold">Properties</h2>
+          <p className="text-sm text-muted-foreground">Buildings, owners and units</p>
         </div>
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
-          <dl className={cn("grid grid-cols-2 gap-3 text-sm", !showDetail && "sm:grid-cols-4")}>
-            {stats.map((st) => (
-              <div key={st.label} className="rounded-lg bg-background p-3">
-                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{st.label}</dt>
-                <dd className="mt-1 text-xl font-semibold">{st.value}</dd>
-              </div>
-            ))}
-          </dl>
+        <Button
+          onClick={() => {
+            setSelectedId(null);
+            setAdding(true);
+          }}
+          disabled={adding}
+        >
+          <Plus className="size-4" />
+          Add property
+        </Button>
+      </div>
 
-        </div>
+      <div className={cn("grid gap-6 md:items-start", showDetail && "md:grid-cols-[minmax(0,380px)_1fr]")}>
+        <div className={cn("flex min-w-0 flex-col gap-4", showDetail && "md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto")}>
+          <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+            <dl className={cn("grid grid-cols-2 gap-3 text-sm", !showDetail && "sm:grid-cols-4")}>
+              {stats.map((st) => (
+                <div key={st.label} className="rounded-lg bg-background p-3">
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{st.label}</dt>
+                  <dd className="mt-1 text-xl font-semibold">{st.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
 
           <div className="flex flex-col gap-2">
             {data.buildings.map((b) => {
@@ -202,7 +203,7 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
             })}
             {data.buildings.length === 0 ? <p className="text-sm text-muted-foreground">No properties yet. Add the first one.</p> : null}
           </div>
-      </div>
+        </div>
 
       {showDetail ? (
       <div className="flex min-w-0 flex-col gap-4">
@@ -225,6 +226,7 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
         </div>
       </div>
       ) : null}
+      </div>
     </div>
   );
 }
