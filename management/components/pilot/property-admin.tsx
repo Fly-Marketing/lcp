@@ -158,10 +158,6 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
       </div>
 
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
-        <div>
-          <h3 className="text-sm font-semibold">Overview</h3>
-          <p className="text-xs text-muted-foreground">Properties and units at a glance</p>
-        </div>
         <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           {stats.map((st) => (
             <div key={st.label} className="rounded-lg bg-background p-3">
