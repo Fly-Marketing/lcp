@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { KeyRound, Loader2, LogOut, Pencil, Plus, Power, Trash2 } from "lucide-react";
+import { ChevronRight, KeyRound, Loader2, LogOut, Pencil, Plus, Power, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CollapsibleCard } from "@/components/pilot/collapsible-card";
+import { MasterDetail } from "@/components/pilot/master-detail";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
   updateAccountName,
 } from "@/app/pilot/admin/actions";
 import { formatPhone } from "@/lib/auth/phone";
+import { cn } from "@/lib/utils";
 import type { AdminAccount, AdminData } from "@/lib/auth/admin";
 
 const selectCls = "h-8 w-full rounded-lg border border-input bg-background px-2 text-sm";
@@ -45,7 +47,7 @@ const testBadge = (
 // Adding and editing happen in place.
 export function AccountAdmin({ data }: { data: AdminData }) {
   const [adding, setAdding] = useState(false);
-  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [issued, setIssued] = useState<{ accountId: string; code: string } | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -66,54 +68,11 @@ export function AccountAdmin({ data }: { data: AdminData }) {
     });
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h2 className="font-heading text-xl font-semibold">People</h2>
-          <p className="text-sm text-muted-foreground">Cleaners, managers and owners</p>
-        </div>
-        <Button onClick={() => setAdding(true)} disabled={adding}>
-          <Plus className="size-4" />
-          Add person
-        </Button>
-      </div>
+  const selected = data.accounts.find((a) => a.id === selectedId) ?? null;
 
-      {adding ? (
-        <CollapsibleCard id="new-person" open onToggle={() => setAdding(false)} title={<span className="font-medium">New person</span>}>
-          <AccountForm
-            data={data}
-            onCancel={() => setAdding(false)}
-            onDone={(id) => {
-              setAdding(false);
-              if (id) setOpen((o) => ({ ...o, [id]: true }));
-            }}
-          />
-        </CollapsibleCard>
-      ) : null}
-
-      {data.accounts.map((a) => (
-        <div key={a.id} className="flex flex-col gap-3">
-        <CollapsibleCard
-          id={`person-${a.id}`}
-          open={!!open[a.id]}
-          onToggle={() => setOpen((o) => ({ ...o, [a.id]: !o[a.id] }))}
-          title={
-            <>
-              <span className="font-medium">{a.name || formatPhone(a.phone)}</span>
-              {a.isTest ? testBadge : null}
-              <span className="text-xs text-muted-foreground">
-                {rolesOf(a).join(" · ") || "No role yet"} · {formatPhone(a.phone)}
-              </span>
-            </>
-          }
-          badge={
-            a.active ? null : (
-              <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">Inactive</span>
-            )
-          }
-        >
-          <div className="flex flex-col gap-4 text-sm">
+  // One person's card: the actions, About (with the devices), any sign-in code, and Properties.
+  const renderPerson = (a: AdminAccount) => (
+    <div className="flex flex-col gap-4 text-sm">
             <div className="flex flex-wrap gap-2">
             <Button variant="outline" disabled={isPending || !a.active} onClick={() => giveCode(a)}>
             <KeyRound className="size-4" />
@@ -184,13 +143,80 @@ export function AccountAdmin({ data }: { data: AdminData }) {
             <PropertyAssignments account={a} data={data} />
 
           </div>
-        </CollapsibleCard>
-        </div>
-      ))}
+  );
 
-      {data.accounts.length === 0 && !adding ? (
-        <p className="text-sm text-muted-foreground">No people yet. Add the first one.</p>
-      ) : null}
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h2 className="font-heading text-xl font-semibold">People</h2>
+          <p className="text-sm text-muted-foreground">Cleaners, managers and owners</p>
+        </div>
+        <Button
+          onClick={() => {
+            setSelectedId(null);
+            setAdding(true);
+          }}
+          disabled={adding}
+        >
+          <Plus className="size-4" />
+          Add person
+        </Button>
+      </div>
+
+      <MasterDetail
+        list={
+          <div className="flex flex-col gap-2">
+            {data.accounts.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => {
+                  setAdding(false);
+                  setSelectedId(a.id);
+                }}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors",
+                  a.id === selectedId && !adding ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted/40",
+                  !a.active && "opacity-60"
+                )}
+              >
+                <div className="flex-1 overflow-hidden">
+                  <p className="truncate text-sm font-semibold">
+                    {a.name || formatPhone(a.phone)}
+                    {a.isTest ? testBadge : null}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {rolesOf(a).join(" · ") || "No role yet"} · {formatPhone(a.phone)}
+                  </p>
+                </div>
+                {!a.active ? (
+                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">Inactive</span>
+                ) : null}
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </button>
+            ))}
+            {data.accounts.length === 0 ? <p className="text-sm text-muted-foreground">No people yet. Add the first one.</p> : null}
+          </div>
+        }
+        detail={
+          adding ? (
+            <AccountForm
+              data={data}
+              onCancel={() => setAdding(false)}
+              onDone={(id) => {
+                setAdding(false);
+                if (id) setSelectedId(id);
+              }}
+            />
+          ) : selected ? (
+            <div className="flex flex-col gap-4">
+              <h2 className="font-heading text-xl font-semibold">{selected.name || formatPhone(selected.phone)}</h2>
+              {renderPerson(selected)}
+            </div>
+          ) : undefined
+        }
+      />
     </div>
   );
 }

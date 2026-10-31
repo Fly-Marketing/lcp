@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, Pencil, Plus } from "lucide-react";
+import { ChevronRight, Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { CollapsibleCard } from "@/components/pilot/collapsible-card";
+import { MasterDetail } from "@/components/pilot/master-detail";
 import { UnitPanel } from "@/components/pilot/unit-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createProperty, createUnit, updateProperty, updateUnit } from "@/app/pilot/admin/actions";
 import type { AdminData } from "@/lib/auth/admin";
+import { cn } from "@/lib/utils";
 
 type Building = AdminData["buildings"][number];
 type Unit = AdminData["units"][number];
@@ -29,14 +31,14 @@ const countBadge = (text: string) => (
 // too, with its details editor and pricing. Adding and editing happen in place.
 export function PropertyAdmin({ data }: { data: AdminData }) {
   const [adding, setAdding] = useState(false);
-  const [openBuildings, setOpenBuildings] = useState<Record<string, boolean>>({});
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openUnits, setOpenUnits] = useState<Record<string, boolean>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [addingUnitTo, setAddingUnitTo] = useState<string | null>(null);
 
   const ownerName = (customerId: string | null) => data.customers.find((c) => c.id === customerId)?.name ?? "No owner";
   const unitsOf = (buildingId: string) => data.units.filter((u) => u.buildingId === buildingId);
-  const flip = (setter: typeof setOpenBuildings, key: string) => setter((o) => ({ ...o, [key]: !o[key] }));
+  const flip = (setter: typeof setOpenUnits, key: string) => setter((o) => ({ ...o, [key]: !o[key] }));
 
   const selfManaged = data.buildings.filter((b) => b.mode === "self").length;
   const unitsWithoutRate = data.units.filter((u) => u.rate === null).length;
@@ -47,71 +49,12 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
     { label: "Units without a rate", value: unitsWithoutRate },
   ];
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h2 className="font-heading text-xl font-semibold">Properties</h2>
-          <p className="text-sm text-muted-foreground">Buildings, owners and units</p>
-        </div>
-        <Button onClick={() => setAdding(true)} disabled={adding}>
-          <Plus className="size-4" />
-          Add property
-        </Button>
-      </div>
+  const selected = data.buildings.find((b) => b.id === selectedId) ?? null;
 
-      {adding ? (
-        <CollapsibleCard
-          id="new-property"
-          open
-          onToggle={() => setAdding(false)}
-          title={<span className="font-medium">New property</span>}
-        >
-          <PropertyForm
-            data={data}
-            onCancel={() => setAdding(false)}
-            onDone={(id) => {
-              setAdding(false);
-              if (id) setOpenBuildings((o) => ({ ...o, [id]: true }));
-            }}
-          />
-        </CollapsibleCard>
-      ) : null}
-
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
-        <div>
-          <h3 className="text-sm font-semibold">Overview</h3>
-          <p className="text-xs text-muted-foreground">Properties and units at a glance</p>
-        </div>
-        <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-          {stats.map((st) => (
-            <div key={st.label} className="rounded-lg bg-background p-3">
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{st.label}</dt>
-              <dd className="mt-1 text-xl font-semibold">{st.value}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <div className="flex flex-col gap-4">
-      {data.buildings.map((b) => {
-        const units = unitsOf(b.id);
-        return (
-          <CollapsibleCard
-            key={b.id}
-            id={`building-${b.id}`}
-            open={!!openBuildings[b.id]}
-            onToggle={() => flip(setOpenBuildings, b.id)}
-            title={
-              <>
-                <span className="font-medium">{b.name}</span>
-                {b.isTest ? testBadge : null}
-                <span className="text-xs text-muted-foreground">
-                  {modeLabel(b.mode)} · {ownerName(b.customerId)}
-                </span>
-              </>
-            }
-            badge={countBadge(`${units.length} ${units.length === 1 ? "unit" : "units"}`)}
-          >
+  // One property's details, edit form and units. Each unit is a dropdown with its details and pricing.
+  const renderBuilding = (b: Building) => {
+    const units = unitsOf(b.id);
+    return (
             <div className="flex flex-col gap-4">
               {editingId === b.id ? (
                 <PropertyForm
@@ -192,15 +135,97 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
               ) : null}
               </div>
             </div>
-          </CollapsibleCard>
-        );
-      })}
+    );
+  };
 
-      {data.buildings.length === 0 && !adding ? (
-        <p className="text-sm text-muted-foreground">No properties yet. Add the first one.</p>
-      ) : null}
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h2 className="font-heading text-xl font-semibold">Properties</h2>
+          <p className="text-sm text-muted-foreground">Buildings, owners and units</p>
         </div>
+        <Button
+          onClick={() => {
+            setSelectedId(null);
+            setAdding(true);
+          }}
+          disabled={adding}
+        >
+          <Plus className="size-4" />
+          Add property
+        </Button>
       </div>
+
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+        <div>
+          <h3 className="text-sm font-semibold">Overview</h3>
+          <p className="text-xs text-muted-foreground">Properties and units at a glance</p>
+        </div>
+        <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          {stats.map((st) => (
+            <div key={st.label} className="rounded-lg bg-background p-3">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{st.label}</dt>
+              <dd className="mt-1 text-xl font-semibold">{st.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+      </div>
+
+      <MasterDetail
+        list={
+          <div className="flex flex-col gap-2">
+            {data.buildings.map((b) => {
+              const units = unitsOf(b.id);
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => {
+                    setAdding(false);
+                    setSelectedId(b.id);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors",
+                    b.id === selectedId && !adding ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted/40"
+                  )}
+                >
+                  <div className="flex-1 overflow-hidden">
+                    <p className="truncate text-sm font-semibold">
+                      {b.name}
+                      {b.isTest ? testBadge : null}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {modeLabel(b.mode)} · {ownerName(b.customerId)}
+                    </p>
+                  </div>
+                  {countBadge(`${units.length} ${units.length === 1 ? "unit" : "units"}`)}
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </button>
+              );
+            })}
+            {data.buildings.length === 0 ? <p className="text-sm text-muted-foreground">No properties yet. Add the first one.</p> : null}
+          </div>
+        }
+        detail={
+          adding ? (
+            <PropertyForm
+              data={data}
+              onCancel={() => setAdding(false)}
+              onDone={(id) => {
+                setAdding(false);
+                if (id) setSelectedId(id);
+              }}
+            />
+          ) : selected ? (
+            <div className="flex flex-col gap-4">
+              <h2 className="font-heading text-xl font-semibold">{selected.name}</h2>
+              {renderBuilding(selected)}
+            </div>
+          ) : undefined
+        }
+      />
     </div>
   );
 }
