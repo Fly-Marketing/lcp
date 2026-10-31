@@ -22,8 +22,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
 
   const staffHere = !!job.buildingId && (session.isAdmin || grantsAt(session, job.buildingId, ["owner", "manager"]).length > 0);
   if (!staffHere) {
-    // Cleaner view: only the jobs this person accepted.
-    if (!cleaner || job.assignedStaffId !== session.staffId) notFound();
+    // Cleaner view: open work and their own jobs. getJobForViewer already limits what they can see.
+    if (!cleaner) notFound();
     const reports = await listReportsForViewer(session, jobId);
     return job.completedAt ? (
       <HistoryDetailPanel job={job} reports={reports} showBackLink backHref="/pilot/jobs" />

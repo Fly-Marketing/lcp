@@ -20,14 +20,14 @@ function refresh(...paths: string[]) {
 export async function acceptJob(jobId: string): Promise<Result> {
   const session = await requireSession();
   const r = await svc.acceptJob(session, jobId);
-  if (r.success) refresh("/pilot/today", "/pilot/jobs");
+  if (r.success) refresh("/pilot/jobs");
   return r;
 }
 
 export async function completeJob(jobId: string): Promise<Result> {
   const session = await requireSession();
   const r = await svc.completeJob(session, jobId);
-  if (r.success) refresh("/pilot/today", "/pilot/jobs", "/pilot/properties", "/pilot/jobs");
+  if (r.success) refresh("/pilot/jobs", "/pilot/properties");
   return r;
 }
 
@@ -119,7 +119,7 @@ export async function saveUnitDetails(
 ): Promise<Result> {
   const session = await requireSession();
   const r = await svc.updateUnitDetails(session, unitId, input);
-  if (r.success) refresh("/pilot/properties", "/pilot/jobs", "/pilot/today", "/pilot/management");
+  if (r.success) refresh("/pilot/properties", "/pilot/jobs", "/pilot/management");
   return r;
 }
 

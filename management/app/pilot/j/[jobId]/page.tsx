@@ -19,7 +19,7 @@ export default async function JobLinkPage({ params }: { params: Promise<{ jobId:
     : false;
   if (staff) redirect(`/pilot/jobs/${jobId}`);
   if (hasRole(session, "cleaner")) {
-    redirect(job.assignedStaffId && job.assignedStaffId === session.staffId ? `/pilot/jobs/${jobId}` : `/pilot/today/${jobId}`);
+    redirect(`/pilot/jobs/${jobId}`);
   }
   notFound();
 }

@@ -3,13 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Building2, ClipboardList, Home, LogOut, Settings, Users, type LucideIcon } from "lucide-react";
+import { Building2, ClipboardList, LogOut, Settings, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/app/pilot/signin/actions";
 import type { NavItem, NavKey } from "@/lib/auth/nav";
 
 const ICONS: Record<NavKey, LucideIcon> = {
-  today: Home,
   properties: Building2,
   jobs: ClipboardList,
   management: Users,

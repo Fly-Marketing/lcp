@@ -31,10 +31,12 @@ export function JobList({
   hrefBase,
   jobs,
   selectedJobId,
+  showHeader = true,
 }: {
   hrefBase: string;
   jobs: PilotJob[];
   selectedJobId?: string;
+  showHeader?: boolean;
 }) {
   const [isTodayOpen, setIsTodayOpen] = useState(true);
   const [isNextCleaningDayOpen, setIsNextCleaningDayOpen] = useState(false);
@@ -53,10 +55,12 @@ export function JobList({
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold">Today</h1>
-        <p className="text-sm text-muted-foreground">Your turnarounds for today</p>
-      </div>
+      {showHeader ? (
+        <div>
+          <h1 className="font-heading text-2xl font-semibold">Today</h1>
+          <p className="text-sm text-muted-foreground">Your turnarounds for today</p>
+        </div>
+      ) : null}
 
       <button
         type="button"
