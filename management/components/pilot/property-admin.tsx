@@ -156,6 +156,18 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
             Add property
           </Button>
         </div>
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+          <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+            {stats.map((st) => (
+              <div key={st.label} className="rounded-lg bg-background p-3">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{st.label}</dt>
+                <dd className="mt-1 text-xl font-semibold">{st.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+        </div>
+
           <div className="flex flex-col gap-2">
             {data.buildings.map((b) => {
               const units = unitsOf(b.id);
@@ -191,17 +203,6 @@ export function PropertyAdmin({ data }: { data: AdminData }) {
       </div>
 
       <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
-          <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-            {stats.map((st) => (
-              <div key={st.label} className="rounded-lg bg-background p-3">
-                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{st.label}</dt>
-                <dd className="mt-1 text-xl font-semibold">{st.value}</dd>
-              </div>
-            ))}
-          </dl>
-
-        </div>
 
         <div className="w-full">
           {adding ? (
