@@ -128,3 +128,10 @@
     @apply font-sans;
   }
 }
+/* Hide scroll bars everywhere. Content still scrolls with the mouse wheel, touch and keyboard. */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
