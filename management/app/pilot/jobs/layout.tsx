@@ -4,6 +4,13 @@ import { getSession } from "@/lib/auth/session";
 import { hasRole } from "@/lib/auth/permissions";
 import { listManagedJobs, listMyJobs, listOpenJobsForCleaner } from "@/lib/pilot/service";
 import type { PilotJob } from "@/lib/pilot/types";
+import { todayInEdmonton } from "@/lib/pilot/validation";
+
+function addDays(date: string, days: number): string {
+  const d = new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +52,8 @@ export default async function ScheduleLayout({ children }: { children: React.Rea
         attentionJobs={attention}
         canFilterMine={canFilterMine}
         canFilterAttention={canFilterAttention}
+        today={todayInEdmonton()}
+        tomorrow={addDays(todayInEdmonton(), 1)}
       >
         {children}
       </ScheduleShell>

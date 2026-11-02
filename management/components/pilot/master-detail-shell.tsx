@@ -12,20 +12,25 @@ import type { PilotJob } from "@/lib/pilot/types";
 // Schedule is the one place for jobs. The list stays mounted while a job is selected, and the
 // selected job id is read here, on the client, because layouts can't see it.
 
-export type ScheduleFilter = "all" | "mine" | "attention";
+export type ScheduleFilter = "all" | "mine" | "attention" | "unaccepted";
+export type ScheduleDay = "all" | "today" | "tomorrow";
 
 const FILTERS: { value: ScheduleFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "mine", label: "My jobs" },
   { value: "attention", label: "Needs attention" },
+  { value: "unaccepted", label: "Unaccepted" },
 ];
 
+// Links from messages can open a day (?day=today|tomorrow) and a filter (?filter=unaccepted, etc.).
 export function ScheduleShell({
   allJobs,
   myJobs,
   attentionJobs,
   canFilterMine,
   canFilterAttention,
+  today,
+  tomorrow,
   children,
 }: {
   allJobs: PilotJob[];
@@ -33,23 +38,45 @@ export function ScheduleShell({
   attentionJobs: PilotJob[];
   canFilterMine: boolean;
   canFilterAttention: boolean;
+  today: string;
+  tomorrow: string;
   children: React.ReactNode;
 }) {
-  const requested = useSearchParams().get("filter");
+  const params = useSearchParams();
+  const requested = params.get("filter");
+  const requestedDay = params.get("day");
   const selectedJobId = useSelectedLayoutSegment() ?? undefined;
+
   const filter: ScheduleFilter =
-    (requested === "mine" && canFilterMine) || (requested === "attention" && canFilterAttention) ? requested : "all";
+    (requested === "mine" && canFilterMine) ||
+    (requested === "attention" && canFilterAttention) ||
+    (requested === "unaccepted" && canFilterAttention)
+      ? requested
+      : "all";
+  const day: ScheduleDay = requestedDay === "today" || requestedDay === "tomorrow" ? requestedDay : "all";
   const visibleFilters = FILTERS.filter(
-    (f) => (f.value !== "mine" || canFilterMine) && (f.value !== "attention" || canFilterAttention)
+    (f) =>
+      (f.value !== "mine" || canFilterMine) &&
+      ((f.value !== "attention" && f.value !== "unaccepted") || canFilterAttention)
   );
 
+  const onDay = (jobs: PilotJob[]) => {
+    if (day === "today") return jobs.filter((j) => j.checkoutDate === today);
+    if (day === "tomorrow") return jobs.filter((j) => j.checkoutDate === tomorrow);
+    return jobs;
+  };
+
+  const base =
+    filter === "mine" ? myJobs : filter === "attention" ? attentionJobs : filter === "unaccepted" ? allJobs.filter((j) => !j.assignedStaffId) : allJobs;
+  const shown = onDay(base);
+
   const list =
-    filter === "all" ? (
-      <JobList hrefBase="/pilot/jobs" jobs={allJobs} selectedJobId={selectedJobId} showHeader={false} />
+    filter === "all" || filter === "unaccepted" ? (
+      <JobList hrefBase="/pilot/jobs" jobs={shown} selectedJobId={selectedJobId} showHeader={false} />
     ) : (
       <HistoryList
         hrefBase="/pilot/jobs"
-        jobs={filter === "mine" ? myJobs : attentionJobs}
+        jobs={shown}
         selectedJobId={selectedJobId}
         variant="staff"
         showHeader={false}
@@ -72,7 +99,7 @@ export function ScheduleShell({
           {visibleFilters.map((f) => (
             <Link
               key={f.value}
-              href={f.value === "all" ? "/pilot/jobs" : `/pilot/jobs?filter=${f.value}`}
+              href={f.value === "all" ? "/pilot/jobs" : `/pilot/jobs?filter=${f.value}${day !== "all" ? `&day=${day}` : ""}`}
               className={cn(
                 "rounded-full border px-3 py-1",
                 filter === f.value ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
