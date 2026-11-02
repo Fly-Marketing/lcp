@@ -50,7 +50,9 @@ export function JobList({
   const toggle = (section: Section) => setOpenSection((current) => (current === section ? null : section));
 
   const today = todayISO();
-  const todayJobs = jobs.filter((j) => j.checkoutDate === today);
+  // Today carries over anything still open from earlier dates, so past-due work stays visible.
+  const todayJobs = jobs.filter((j) => j.checkoutDate !== null && j.checkoutDate <= today);
+  const overdueCount = jobs.filter((j) => j.checkoutDate !== null && j.checkoutDate < today).length;
   const futureJobs = jobs.filter(
     (job): job is PilotJob & { checkoutDate: string } =>
       job.checkoutDate !== null && job.checkoutDate > today
@@ -75,7 +77,12 @@ export function JobList({
         open={openSection === "today"}
         onToggle={() => toggle("today")}
         icon={<CalendarDays className="size-4 text-primary" />}
-        title={<span className="font-medium">{formatToday()}</span>}
+        title={
+          <>
+            <span className="font-medium">{formatToday()}</span>
+            {overdueCount > 0 ? <span className="text-xs font-semibold text-rose-600">· {overdueCount} past due</span> : null}
+          </>
+        }
         badge={badge(`${todayJobs.length} ${todayJobs.length === 1 ? "job" : "jobs"} today`)}
       >
         <div className="flex flex-col gap-3">

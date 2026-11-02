@@ -61,7 +61,7 @@ export function ScheduleShell({
   );
 
   const onDay = (jobs: PilotJob[]) => {
-    if (day === "today") return jobs.filter((j) => j.checkoutDate === today);
+    if (day === "today") return jobs.filter((j) => j.checkoutDate !== null && j.checkoutDate <= today);
     if (day === "tomorrow") return jobs.filter((j) => j.checkoutDate === tomorrow);
     return jobs;
   };
