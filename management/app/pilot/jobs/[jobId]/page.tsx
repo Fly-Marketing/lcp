@@ -2,10 +2,11 @@ import { notFound, redirect } from "next/navigation";
 
 import { HistoryDetailPanel } from "@/components/pilot/history-detail-panel";
 import { JobDetailPanel } from "@/components/pilot/job-detail-panel";
+import { ManagerJobActions } from "@/components/pilot/manager-job-actions";
 import { StaffJobPanel } from "@/components/pilot/staff-job-panel";
 import { requireSession } from "@/lib/auth/session";
 import { grantsAt, hasRole } from "@/lib/auth/permissions";
-import { getJobForViewer, getPriceHistory, jobPermissions, listReportsForViewer } from "@/lib/pilot/service";
+import { getJobForViewer, getPriceHistory, getTeam, jobPermissions, listReportsForViewer } from "@/lib/pilot/service";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,20 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
   const perms = jobPermissions(session, job);
   const isManagerHere = session.isAdmin || grantsAt(session, job.buildingId ?? "", ["manager"]).length > 0;
 
+  const team = await getTeam(session);
+  const cleaners = team.find((t) => t.building.id === job.buildingId)?.cleaners ?? [];
+
   return (
+    <div className="flex flex-col gap-4">
+      {isManagerHere ? (
+        <ManagerJobActions
+          jobId={job.id}
+          cleaners={cleaners}
+          assignedStaffId={job.assignedStaffId}
+          done={!!job.completedAt}
+          archived={job.status === "Cancelled"}
+        />
+      ) : null}
     <StaffJobPanel
       job={job}
       status={perms.ownerStatus}
@@ -50,5 +64,6 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
       canResolve={isManagerHere}
       backHref="/pilot/jobs"
     />
+    </div>
   );
 }

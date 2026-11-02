@@ -5,6 +5,7 @@ export type Action =
   | "job.accept"
   | "job.complete"
   | "job.updateResult"
+  | "job.manage"
   | "job.create"
   | "report.view"
   | "report.create"
@@ -80,6 +81,9 @@ export function can(session: Session | null, action: Action, ctx: PermissionCont
 
     case "job.complete":
       return !!ctx.job && session.staffId !== null && ctx.job.assignedStaffId === session.staffId;
+
+    case "job.manage":
+      return isManager || session.isAdmin;
 
     case "job.updateResult":
       return (

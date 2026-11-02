@@ -67,6 +67,12 @@ export interface ReportRow {
   resolvedAt: string | null;
 }
 
+export interface ManagerJobPatch {
+  markDone?: boolean;
+  assignStaffId?: string | null;
+  archive?: boolean;
+}
+
 export interface CleanerRow {
   buildingId: string;
   staffId: string;
@@ -138,6 +144,8 @@ export interface PilotRepo {
   /** Atomic: succeeds only for the assigned staff member and an unfinished job. */
   completeJob(jobId: string, staffId: string): Promise<boolean>;
   setJobResult(jobId: string, state: string): Promise<boolean>;
+  /** Manager override: mark done, assign (or unassign) a cleaner, or archive. */
+  managerUpdateJob(jobId: string, patch: ManagerJobPatch): Promise<boolean>;
   createOwnerJob(input: {
     unitId: string;
     date: string;

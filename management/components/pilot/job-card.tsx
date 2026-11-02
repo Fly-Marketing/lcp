@@ -6,13 +6,14 @@ import type { PilotJob } from "@/lib/pilot/types";
 export function PilotJobCard({
   hrefBase,
   job,
-  isToday,
+  tag,
   isSelected,
   footer,
 }: {
   hrefBase: string;
   job: PilotJob;
-  isToday?: boolean;
+  // e.g. "Today" or "-1 day" (red when past due)
+  tag?: { label: string; pastDue: boolean } | null;
   isSelected?: boolean;
   footer?: React.ReactNode;
 }) {
@@ -29,9 +30,14 @@ export function PilotJobCard({
             <h3 className="font-heading text-base font-semibold">{job.unitLabel}</h3>
             <p className="text-sm text-muted-foreground">{job.propertyName}</p>
           </div>
-          {isToday ? (
-            <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-              Today
+          {tag ? (
+            <span
+              className={cn(
+                "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
+                tag.pastDue ? "bg-rose-100 text-rose-700" : "bg-primary/10 text-primary"
+              )}
+            >
+              {tag.label}
             </span>
           ) : null}
         </div>

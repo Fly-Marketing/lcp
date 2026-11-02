@@ -28,6 +28,14 @@ function formatCleaningDay(date: string) {
   });
 }
 
+// "Today" for today's cleans, "-1 day" / "-2 days" for past due ones.
+function dayTag(date: string | null, today: string): { label: string; pastDue: boolean } | null {
+  if (!date) return null;
+  if (date === today) return { label: "Today", pastDue: false };
+  const days = Math.round((Date.parse(today) - Date.parse(date)) / 86400000);
+  return { label: `-${days} ${days === 1 ? "day" : "days"}`, pastDue: true };
+}
+
 const badge = (text: string) => (
   <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{text}</span>
 );
@@ -87,7 +95,7 @@ export function JobList({
       >
         <div className="flex flex-col gap-3">
           {todayJobs.map((job) => (
-            <PilotJobCard key={job.id} hrefBase={hrefBase} job={job} isToday isSelected={job.id === selectedJobId} />
+            <PilotJobCard key={job.id} hrefBase={hrefBase} job={job} tag={dayTag(job.checkoutDate, today)} isSelected={job.id === selectedJobId} />
           ))}
         </div>
       </CollapsibleCard>

@@ -3,7 +3,7 @@ import { buildingIdsFor, can, grantsAt, hasRole } from "@/lib/auth/permissions";
 import { normalizePhone } from "@/lib/auth/phone";
 import type { Session } from "@/lib/auth/types";
 import { getRepo } from "@/lib/pilot/repo-select";
-import type { BuildingRow, JobRow, ReportRow, UnitRow } from "@/lib/pilot/repo";
+import type { BuildingRow, JobRow, ManagerJobPatch, ReportRow, UnitRow } from "@/lib/pilot/repo";
 import { firstName, ownerStatus, unitStatus, type UnitStatus } from "@/lib/pilot/status";
 import {
   DEFAULT_CHECKLIST_ITEMS,
@@ -182,6 +182,21 @@ export async function completeJob(session: Session, jobId: string): Promise<Ok |
   if (!can(session, "job.complete", { buildingId: job.buildingId, job: jobCtx(job) })) return DENIED;
   const done = await repo.completeJob(jobId, session.staffId);
   return done ? { success: true } : fail("This job can't be marked complete");
+}
+
+// Manager override: mark done, assign (or unassign) a cleaner who is linked to this property, or archive.
+export async function managerUpdateJob(session: Session, jobId: string, patch: ManagerJobPatch): Promise<Ok | Fail> {
+  const repo = getRepo();
+  const job = await repo.getJob(jobId);
+  if (!job?.buildingId) return DENIED;
+  if (!can(session, "job.manage", { buildingId: job.buildingId })) return DENIED;
+  if (!patch.markDone && !patch.archive && patch.assignStaffId === undefined) return fail("Nothing to change");
+  if (patch.assignStaffId) {
+    const cleaners = await repo.listCleaners([job.buildingId]);
+    if (!cleaners.some((c) => c.staffId === patch.assignStaffId)) return fail("That cleaner isn't linked to this property");
+  }
+  const ok = await repo.managerUpdateJob(jobId, patch);
+  return ok ? { success: true } : fail("Could not update this job");
 }
 
 export async function setCompletedJobResult(session: Session, jobId: string, state: string): Promise<Ok | Fail> {

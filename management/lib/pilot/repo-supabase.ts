@@ -203,6 +203,27 @@ export function createSupabaseRepo(): PilotRepo {
       return (data?.length ?? 0) === 1;
     },
 
+    async managerUpdateJob(jobId, patch) {
+      const now = new Date().toISOString();
+      const update: Record<string, unknown> = {};
+      if (patch.archive) {
+        update.status = "Cancelled";
+        update.cancelled_at = now;
+      } else {
+        if (patch.markDone) {
+          update.status = "Completed";
+          update.completed_at = now;
+        }
+        if (patch.assignStaffId !== undefined) {
+          update.assigned_staff_id = patch.assignStaffId;
+          update.claimed_at = patch.assignStaffId ? now : null;
+          if (patch.assignStaffId && !patch.markDone) update.status = "Claimed";
+        }
+      }
+      const { data } = await db().from("jobs").update(update).eq("id", jobId).select("id");
+      return (data?.length ?? 0) === 1;
+    },
+
     async createOwnerJob(input): Promise<CreateJobResult> {
       const { data, error } = await db().rpc("create_owner_job", {
         p_unit_id: input.unitId,

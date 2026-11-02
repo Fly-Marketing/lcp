@@ -288,6 +288,27 @@ export function createFakeRepo(state: FakeState = fakeFixtures()): PilotRepo & {
       j.status = state2;
       return true;
     },
+    async managerUpdateJob(jobId, patch) {
+      const j = findJob(jobId);
+      if (!j) return false;
+      const now = iso(new Date());
+      if (patch.archive) {
+        j.status = "Cancelled";
+        j.cancelledAt = now;
+        return true;
+      }
+      if (patch.markDone) {
+        j.status = "Completed";
+        j.completedAt = now;
+      }
+      if (patch.assignStaffId !== undefined) {
+        j.assignedStaffId = patch.assignStaffId;
+        j.claimedAt = patch.assignStaffId ? now : null;
+        if (patch.assignStaffId && !patch.markDone) j.status = "Claimed";
+      }
+      return true;
+    },
+
     async createOwnerJob(input): Promise<CreateJobResult> {
       const replay = state.idempotency[input.idempotencyKey];
       if (replay) return { jobId: replay, status: "replayed" };
