@@ -203,9 +203,14 @@ export function createSupabaseRepo(): PilotRepo {
       return (data?.length ?? 0) === 1;
     },
 
-    async managerUpdateJob(jobId, patch) {
+    async managerUpdateJob(jobId, patch, accountId) {
       const now = new Date().toISOString();
       const update: Record<string, unknown> = {};
+      if (patch.reschedule) {
+        update.checkout_date = patch.reschedule;
+        update.earliest_clean_date = patch.reschedule;
+        update.latest_clean_date = patch.reschedule;
+      }
       if (patch.archive) {
         update.status = "Cancelled";
         update.cancelled_at = now;
@@ -221,7 +226,19 @@ export function createSupabaseRepo(): PilotRepo {
         }
       }
       const { data } = await db().from("jobs").update(update).eq("id", jobId).select("id");
-      return (data?.length ?? 0) === 1;
+      if ((data?.length ?? 0) !== 1) return false;
+      const action = patch.archive ? "archive" : patch.reschedule ? "reschedule" : patch.markDone ? "markDone" : "assign";
+      await db()
+        .from("job_overrides")
+        .insert({
+          job_id: jobId,
+          action,
+          tag: patch.tag,
+          comment: patch.comment ?? null,
+          new_date: patch.reschedule ?? null,
+          account_id: accountId,
+        });
+      return true;
     },
 
     async createOwnerJob(input): Promise<CreateJobResult> {

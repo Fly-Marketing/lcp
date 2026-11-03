@@ -292,6 +292,10 @@ export function createFakeRepo(state: FakeState = fakeFixtures()): PilotRepo & {
       const j = findJob(jobId);
       if (!j) return false;
       const now = iso(new Date());
+      if (patch.reschedule) {
+        j.checkoutDate = patch.reschedule;
+        j.latestCleanDate = patch.reschedule;
+      }
       if (patch.archive) {
         j.status = "Cancelled";
         j.cancelledAt = now;

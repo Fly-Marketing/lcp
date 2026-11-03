@@ -3,6 +3,7 @@ import { buildingIdsFor, can, grantsAt, hasRole } from "@/lib/auth/permissions";
 import { normalizePhone } from "@/lib/auth/phone";
 import type { Session } from "@/lib/auth/types";
 import { getRepo } from "@/lib/pilot/repo-select";
+import { isOverrideTag } from "@/lib/pilot/override-tags";
 import type { BuildingRow, JobRow, ManagerJobPatch, ReportRow, UnitRow } from "@/lib/pilot/repo";
 import { firstName, ownerStatus, unitStatus, type UnitStatus } from "@/lib/pilot/status";
 import {
@@ -190,12 +191,24 @@ export async function managerUpdateJob(session: Session, jobId: string, patch: M
   const job = await repo.getJob(jobId);
   if (!job?.buildingId) return DENIED;
   if (!can(session, "job.manage", { buildingId: job.buildingId })) return DENIED;
-  if (!patch.markDone && !patch.archive && patch.assignStaffId === undefined) return fail("Nothing to change");
+  // Mark done (optionally with a cleaner), Archive, or Reschedule. Every one of them needs a tag.
+  const picked = [patch.markDone, patch.archive, patch.reschedule !== undefined].filter(Boolean).length;
+  if (picked === 0) return fail("Choose Mark done, Archive or Reschedule");
+  if (picked > 1) return fail("Choose one override at a time");
+  if (patch.reschedule !== undefined) {
+    const dateError = validateJobDate(patch.reschedule, todayInEdmonton());
+    if (dateError) return fail(dateError);
+    if (job.status === "Cancelled" || job.completedAt) return fail("This job is already finished");
+  }
+  const action = patch.archive ? "archive" : patch.reschedule !== undefined ? "reschedule" : "markDone";
+  if (!isOverrideTag(action, patch.tag)) return fail("Choose why you are overriding this job");
   if (patch.assignStaffId) {
     const cleaners = await repo.listCleaners([job.buildingId]);
     if (!cleaners.some((c) => c.staffId === patch.assignStaffId)) return fail("That cleaner isn't linked to this property");
   }
-  const ok = await repo.managerUpdateJob(jobId, patch);
+  const comment = patch.comment?.trim() || null;
+  if (comment && comment.length > 500) return fail("Keep the comment under 500 characters");
+  const ok = await repo.managerUpdateJob(jobId, { ...patch, comment, tag: patch.tag ?? null }, session.accountId);
   return ok ? { success: true } : fail("Could not update this job");
 }
 

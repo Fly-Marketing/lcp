@@ -5,15 +5,14 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
+  DollarSign,
   Calendar,
   CheckCircle2,
   ChevronLeft,
   CircleDot,
   Clock,
-  DollarSign,
   FileWarning,
   KeyRound,
-  Loader2,
   MapPin,
   MessageSquareWarning,
   TriangleAlert,
@@ -23,7 +22,6 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -32,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { resolveReport, saveJobPrice, updateCompletedJob } from "@/lib/pilot/actions";
+import { resolveReport, updateCompletedJob } from "@/lib/pilot/actions";
 import type { OwnerStatus } from "@/lib/pilot/status";
 import type { PilotJob, PilotReport } from "@/lib/pilot/types";
 
@@ -44,20 +42,11 @@ const STATUS_STYLE: Record<OwnerStatus, { cls: string; icon: typeof CircleDot }>
   Cancelled: { cls: "border-red-200 bg-red-50 text-red-800", icon: XCircle },
 };
 
-export interface PriceHistoryView {
-  oldPrice: number | null;
-  newPrice: number;
-  reason: string | null;
-  changedAt: string;
-  changedByName: string | null;
-}
-
 export function StaffJobPanel({
   job,
   status,
   reports,
-  priceHistory,
-  canEditPrice,
+  showPrice,
   canSetResult,
   canResolve,
   backHref,
@@ -65,30 +54,17 @@ export function StaffJobPanel({
   job: PilotJob;
   status: OwnerStatus;
   reports: PilotReport[];
-  priceHistory: PriceHistoryView[];
-  canEditPrice: boolean;
+  showPrice: boolean;
   canSetResult: boolean;
   canResolve: boolean;
   backHref: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [price, setPrice] = useState(job.price != null ? String(job.price) : "");
-  const [reason, setReason] = useState("");
   const [result, setResult] = useState(
     ["Completed", "Needs attention", "Not clean"].includes(job.status) ? job.status : "Completed"
   );
   const S = STATUS_STYLE[status];
-
-  function savePrice() {
-    startTransition(async () => {
-      const r = await saveJobPrice(job.id, price, reason || null);
-      if (!r.success) return void toast.error(r.message);
-      toast.success("Price updated");
-      setReason("");
-      router.refresh();
-    });
-  }
 
   function saveResult() {
     startTransition(async () => {
@@ -160,13 +136,17 @@ export function StaffJobPanel({
             <span>Cleaner: {job.assignedCleanerName}</span>
           </div>
         ) : null}
-        {job.price != null ? (
-          <div className="flex items-start gap-2">
-            <DollarSign className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <span>${job.price.toFixed(2)}</span>
-          </div>
-        ) : null}
       </div>
+
+      {showPrice ? (
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-4 text-sm">
+          <DollarSign className="size-4 shrink-0 text-muted-foreground" />
+          <span>Price</span>
+          <span className={job.price != null ? "ml-auto" : "ml-auto text-muted-foreground"}>
+            {job.price != null ? `$${job.price.toFixed(2)}` : "Not set"}
+          </span>
+        </div>
+      ) : null}
 
       {job.accessInstructions ? (
         <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-4 text-sm">
@@ -178,38 +158,6 @@ export function StaffJobPanel({
         <div className="flex items-start gap-2 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           <span>{job.importantNotes}</span>
-        </div>
-      ) : null}
-
-      {canEditPrice ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
-          <p className="text-sm font-medium">Agreed price</p>
-          <div className="grid grid-cols-[120px_1fr] gap-2">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="price">Price ($)</Label>
-              <Input id="price" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="reason">Reason (optional)</Label>
-              <Input id="reason" value={reason} maxLength={300} onChange={(e) => setReason(e.target.value)} />
-            </div>
-          </div>
-          <Button disabled={isPending || price === ""} onClick={savePrice}>
-            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Update price
-          </Button>
-          {priceHistory.length > 0 ? (
-            <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
-              {priceHistory.map((h, i) => (
-                <li key={i}>
-                  {new Date(h.changedAt).toLocaleDateString("en-CA", { month: "short", day: "numeric" })} ·{" "}
-                  {h.oldPrice != null ? `$${h.oldPrice.toFixed(2)} → ` : ""}${h.newPrice.toFixed(2)}
-                  {h.changedByName ? ` · ${h.changedByName}` : ""}
-                  {h.reason ? ` · ${h.reason}` : ""}
-                </li>
-              ))}
-            </ul>
-          ) : null}
         </div>
       ) : null}
 

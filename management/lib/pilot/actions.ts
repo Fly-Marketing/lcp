@@ -27,7 +27,7 @@ export async function acceptJob(jobId: string): Promise<Result> {
 // Manager override from a job's page: mark done, assign a cleaner, or archive.
 export async function managerUpdateJob(
   jobId: string,
-  patch: { markDone?: boolean; assignStaffId?: string | null; archive?: boolean }
+  patch: { markDone?: boolean; assignStaffId?: string | null; archive?: boolean; reschedule?: string; comment?: string | null; tag?: string | null }
 ): Promise<Result> {
   const session = await requireSession();
   const r = await svc.managerUpdateJob(session, jobId, patch);

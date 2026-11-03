@@ -39,31 +39,34 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
   ]);
   const perms = jobPermissions(session, job);
   const isManagerHere = session.isAdmin || grantsAt(session, job.buildingId ?? "", ["manager"]).length > 0;
-
-  const team = await getTeam(session);
+  const team = isManagerHere ? await getTeam(session) : [];
   const cleaners = team.find((t) => t.building.id === job.buildingId)?.cleaners ?? [];
 
   return (
     <div className="flex flex-col gap-4">
-      {isManagerHere ? (
+      <StaffJobPanel
+        job={job}
+        status={perms.ownerStatus}
+        reports={reports}
+        showPrice={staffHere}
+        canSetResult={perms.canSetResult && isManagerHere}
+        canResolve={isManagerHere}
+        backHref="/pilot/jobs"
+      />
+      {isManagerHere || perms.canEditPrice ? (
         <ManagerJobActions
           jobId={job.id}
+          done={!!job.completedAt}
+          checkoutDate={job.checkoutDate}
+          archived={job.status === "Cancelled"}
+          canOverride={isManagerHere}
+          canEditPrice={perms.canEditPrice}
+          price={job.price}
+          priceHistory={priceHistory}
           cleaners={cleaners}
           assignedStaffId={job.assignedStaffId}
-          done={!!job.completedAt}
-          archived={job.status === "Cancelled"}
         />
       ) : null}
-    <StaffJobPanel
-      job={job}
-      status={perms.ownerStatus}
-      reports={reports}
-      priceHistory={priceHistory}
-      canEditPrice={perms.canEditPrice}
-      canSetResult={perms.canSetResult && isManagerHere}
-      canResolve={isManagerHere}
-      backHref="/pilot/jobs"
-    />
     </div>
   );
 }

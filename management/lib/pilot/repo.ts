@@ -71,6 +71,9 @@ export interface ManagerJobPatch {
   markDone?: boolean;
   assignStaffId?: string | null;
   archive?: boolean;
+  reschedule?: string;
+  comment?: string | null;
+  tag?: string | null;
 }
 
 export interface CleanerRow {
@@ -145,7 +148,7 @@ export interface PilotRepo {
   completeJob(jobId: string, staffId: string): Promise<boolean>;
   setJobResult(jobId: string, state: string): Promise<boolean>;
   /** Manager override: mark done, assign (or unassign) a cleaner, or archive. */
-  managerUpdateJob(jobId: string, patch: ManagerJobPatch): Promise<boolean>;
+  managerUpdateJob(jobId: string, patch: ManagerJobPatch, accountId: string): Promise<boolean>;
   createOwnerJob(input: {
     unitId: string;
     date: string;
