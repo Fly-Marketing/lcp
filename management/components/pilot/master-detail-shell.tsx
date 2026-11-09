@@ -72,7 +72,7 @@ export function ScheduleShell({
 
   const list =
     filter === "all" || filter === "unaccepted" ? (
-      <JobList hrefBase="/pilot/jobs" jobs={shown} selectedJobId={selectedJobId} showHeader={false} />
+      <JobList hrefBase="/pilot/jobs" jobs={shown} selectedJobId={selectedJobId} showHeader={false} today={today} />
     ) : (
       <HistoryList
         hrefBase="/pilot/jobs"

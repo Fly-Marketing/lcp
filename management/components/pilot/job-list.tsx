@@ -7,16 +7,13 @@ import { CollapsibleCard } from "@/components/pilot/collapsible-card";
 import { PilotJobCard } from "@/components/pilot/job-card";
 import type { PilotJob } from "@/lib/pilot/types";
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function formatToday() {
   return new Date().toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "America/Edmonton",
   });
 }
 
@@ -47,17 +44,19 @@ export function JobList({
   jobs,
   selectedJobId,
   showHeader = true,
+  today,
 }: {
   hrefBase: string;
   jobs: PilotJob[];
   selectedJobId?: string;
   showHeader?: boolean;
+  // Today's date in Edmonton (YYYY-MM-DD), computed on the server.
+  today: string;
 }) {
   // One group is open at a time: opening one closes the others.
   const [openSection, setOpenSection] = useState<Section | null>("today");
   const toggle = (section: Section) => setOpenSection((current) => (current === section ? null : section));
 
-  const today = todayISO();
   // Today carries over anything still open from earlier dates, so past-due work stays visible.
   const todayJobs = jobs.filter((j) => j.checkoutDate !== null && j.checkoutDate <= today);
   const overdueCount = jobs.filter((j) => j.checkoutDate !== null && j.checkoutDate < today).length;
